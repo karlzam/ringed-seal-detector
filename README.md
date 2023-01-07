@@ -1,5 +1,10 @@
 ## Repo for K. Zammit's Work on Ringed Seal Detector ##
 
+## calc_stats.py ##
+
+- Calculate stats about call length and plot histograms for each type and all together 
+- Look at outliers; will be weird because of annotating multiple calls at once 
+______________________
 ## call_script.py ##
 
 - Calls MERIDIAN based functions from meridian_utils.py to create a database, train a classifier, and create a detector
