@@ -1,15 +1,35 @@
 ## Repo for K. Zammit's Work on Ringed Seal Detector ##
 
-## calc_stats.py ##
 
-- Calculate stats about call length and plot histograms for each type and all together 
-- Look at outliers; will be weird because of annotating multiple calls at once 
-______________________
-## call_script.py ##
+## excel_outputs directory ##
 
-- Calls MERIDIAN based functions from meridian_utils.py to create a database, train a classifier, and create a detector
-- User must set pathways to where things live
+- Stores annotation tables to work with, outputs from create_annot_table_all
 ______________________
+
+
+## figs directory ##
+
+- Stores plots for visualizing data
+______________________
+
+
+## input_files directory ##
+
+- Has recipe and spectro gen files
+______________________
+
+
+## call_script_meridian_utils.py ##
+
+- Script to edit to call functions within meridian utils
+______________________
+
+
+## call_script_pretrain_utils.py ##
+
+- Script to edit to call functions within pretrain utils
+______________________
+
 
 ## create_annot_table_all.py ##
 
@@ -23,8 +43,8 @@ ______________________
 	- end time was the file offset + delta time
 - "formatted_annot_manual.xlsx":
 	- manually deleted unnecessary columns, this sheet can be used to generate mini test runs
-
 ______________________
+
 
 ## create_dataset_from_annot.py ##
 
@@ -37,23 +57,19 @@ ______________________
 ## meridian_utils.py ##
 
 - Basically the MERIDIAN tutorial
-- Need to add spectrogram function 
+- Create a database, create a detector, train a classifier functions 
+______________________
+
+## pretrain_utils.py ##
+
+- Functions to compute statistics and visualize data before creating database for training
+- TODO: Spectrogram plotting
 ______________________
 
 ## sort_data.py ##
 
 - My OG attempt at creating annotation csvs, but I did it sheet based instead of one sheet 
-- This has been replaced by create_annotation_table_all.py
-______________________
-
-## recipe.json ##
-
-- Recipe file for ResNet training from MERIDIAN tutorial
-______________________
-
-## spec_config_ruwan.json ##
-
-- Ruwan's spectrogram config file 
+- This has been replaced by create_annotation_table_all.py, can be removed from repo 
 ______________________
 
 

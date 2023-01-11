@@ -41,6 +41,7 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     positives_val = sl.select(annotations=std_annot_val, length=length, step=0.0, center=False)
 
     # calculate the file durations
+    #TODO: Update this to be able to look at the actual table, get the pathways to each file, and check there
     file_durations_train = sl.file_duration_table(data_folder + '\\' + 'train')
     file_durations_val = sl.file_duration_table(data_folder + '\\' + 'val')
 
@@ -58,6 +59,7 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     # load in the spectrogram settings
     spec_cfg = load_audio_representation(spectro_file, name="spectrogram")
 
+    # TODO: Update this to be able to look at multiple data dirs instead of a train and validation dir
     # compute spectrograms and save them into the database file
     dbi.create_database(output_file=output_db_name, data_dir=data_folder + '\\' + 'train',
                         dataset_name='train', selections=selections_train,
