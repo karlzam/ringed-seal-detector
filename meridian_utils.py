@@ -12,7 +12,7 @@ from ketos.audio.audio_loader import AudioFrameLoader, AudioLoader, SelectionTab
 from ketos.neural_networks.dev_utils.detection import process, save_detections
 
 
-def create_database(train_csv, val_csv, length, output_db_name, spectro_file, data_folder):
+def create_database(train_csv, val_csv, length, output_db_name, spectro_file, data_folder, file_durations_file):
     """
     Create a database of spectrograms for the training and validation datasets from annotation table .csv files
     :param train_csv: annotation table for the training data in .csv format (; delimited)
@@ -31,17 +31,117 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
 
     # force labels all to be 1 for binary classification
     std_annot_train['label'] = std_annot_train['label'].replace(2, 1)
-    print('Remember youre forcing all labels to be 1! Training data standardized? ' + str(sl.is_standardized(std_annot_train)))
+    print('Remember youre forcing all labels to be 1! Training data standardized? ' + str(
+        sl.is_standardized(std_annot_train)))
 
     std_annot_val = sl.standardize(table=annot_val, labels=["B", "BY"], start_labels_at_1=True, trim_table=True)
     std_annot_val['label'] = std_annot_val['label'].replace(2, 1)
-    print('Remember youre forcing all labels to be 1! Validation data standardized? ' + str(sl.is_standardized(std_annot_val)))
+    print('Remember youre forcing all labels to be 1! Validation data standardized? ' + str(
+        sl.is_standardized(std_annot_val)))
 
     # create segments of uniform length from the annotations tables
-    positives_train = sl.select(annotations=std_annot_train, length=length, step=0.5, min_overlap=0.5, center=False)
+    positives_train = sl.select(annotations=std_annot_train, length=length, step=1, min_overlap=0.8, center=False)
+
+    # for training, we want more samples than we have. could do the same type of augmentation, but need to keep in mind
+    # that duplication is possible in the performance metrics. same thing for the mistakes. if you want to use this
+    # model for individual calls, might be easier to not use augmentation. for a binary detector, ok to do
+    # augmentation.
     positives_val = sl.select(annotations=std_annot_val, length=length, step=0.0, center=False)
 
-    '''
+    # read in the file durations file
+    #file_durations = pd.read_excel(r'C:\Users\kzammit\Documents\Detector\20230606\inputs\all_file_durations.xlsx')
+    file_durations = pd.read_excel(file_durations_file)
+
+    # drop rows in file durations that do not correspond to those wav files
+    file_durations_train = file_durations[file_durations['filename'].isin(annot_train['filename'])]
+    file_durations_val = file_durations[file_durations['filename'].isin(annot_val['filename'])]
+
+    # generate negative segments (the same number as the positive segments),
+    negatives_train = sl.create_rndm_selections(annotations=std_annot_train, files=file_durations_train,
+                                                length=length, num=len(positives_train), trim_table=True)
+
+    negatives_val = sl.create_rndm_selections(annotations=std_annot_val, files=file_durations_val,
+                                              length=length, num=len(positives_val), trim_table=True)
+
+    # join the positive and negative vals together
+    selections_train = pd.concat([positives_train, negatives_train], sort=False)
+    selections_train.to_excel(r'C:\Users\kzammit\Documents\Detector\20230606\train_selections_20230606.xlsx')
+    selections_val = pd.concat([positives_val, negatives_val], sort=False)
+    selections_val.to_excel(r'C:\Users\kzammit\Documents\Detector\20230606\val_selections_20230606.xlsx')
+
+    # load in the spectrogram settings
+    spec_cfg = load_audio_representation(spectro_file, name="spectrogram")
+
+    # compute spectrograms and save them into the database file
+    dbi.create_database(output_file=output_db_name,  # empty brackets
+                        dataset_name='train', selections=selections_train, data_dir=data_folder,
+                        audio_repres=spec_cfg)
+
+    dbi.create_database(output_file=output_db_name,
+                        dataset_name='validation', selections=selections_val, data_dir=data_folder,
+                        audio_repres=spec_cfg)
+
+
+def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spectro_file, checkpoint_folder):
+    """
+
+    :param database_h5:
+    :param recipe:
+    :param batch_size:
+    :param n_epochs:
+    :param output_name:
+    :param spectro_file:
+    :return:
+    """
+
+    np.random.seed(1000)
+    tf.random.set_seed(2000)
+
+    db = dbi.open_file(database_h5, 'r')
+
+    train_data = dbi.open_table(db, "/train/data")
+    val_data = dbi.open_table(db, "/validation/data")
+
+    train_generator = BatchGenerator(batch_size=batch_size, data_table=train_data,
+                                     output_transform_func=ResNetInterface.transform_batch,
+                                     shuffle=True, refresh_on_epoch_end=True)
+
+    val_generator = BatchGenerator(batch_size=batch_size, data_table=val_data,
+                                   output_transform_func=ResNetInterface.transform_batch,
+                                   shuffle=False, refresh_on_epoch_end=False)
+
+    resnet = ResNetInterface.build_from_recipe_file(recipe)
+
+    resnet.train_generator = train_generator
+    resnet.val_generator = val_generator
+
+    resnet.checkpoint_dir = checkpoint_folder
+
+    resnet.train_loop(n_epochs=n_epochs, verbose=True, log_csv=True, csv_name='log.csv')
+
+    db.close()
+
+    resnet.save_model(output_name, audio_repr=spectro_file)
+
+
+def create_detector(model_file, temp_model_folder, threshold, audio_folder, detections_csv, step_size, batch_size,
+                    buffer):
+    model, audio_repr = ResNetInterface.load_model_file(model_file=model_file, new_model_folder=temp_model_folder,
+                                                        load_audio_repr=True)
+
+    spec_config = audio_repr[0]['spectrogram']
+
+    audio_loader = AudioFrameLoader(path=audio_folder, duration=spec_config['duration'],
+                                    step=step_size, stop=False, representation=MagSpectrogram,
+                                    representation_params=spec_config)
+
+    detections = process(audio_loader, model=model, batch_size=batch_size, progress_bar=True,
+                         group=True, threshold=threshold, buffer=buffer)
+
+    save_detections(detections=detections, save_to=detections_csv)
+
+def calc_file_durations(data_folder):
+
     # calculate the file durations
     # file_durations_val = sl.file_duration_table(data_folder)
     # file_durations_train = sl.file_duration_table(data_folder)
@@ -78,99 +178,6 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     #file_durations.to_excel('Ulu_durations.xlsx', index=False)
 
     #file_durations.to_excel('file_durations_minusUlu.xlsx', index=False)
-    
-    '''
-
-    file_durations = pd.read_excel(r'C:\Users\kzammit\Documents\Detector\20230531\inputs\all_file_durations.xlsx')
-
-    # generate negative segments (the same number as the positive segments),
-    # specifying the same length as the training data
-    # Q for Fabio: It's ok that I'm using one big file durations file right? Not split into train and val?
-    # the tutorial has it split into train and val
-    negatives_train = sl.create_rndm_selections(annotations=std_annot_train, files=file_durations,
-                                                length=length, num=len(positives_train), trim_table=True)
 
 
-    negatives_val = sl.create_rndm_selections(annotations=std_annot_val, files=file_durations,
-                                              length=length, num=len(positives_val), trim_table=True)
 
-    # join the positive and negative vals together
-    selections_train = pd.concat([positives_train, negatives_train], sort=False)
-    #selections_train.to_excel('train_selections_20230530.xlsx')
-    selections_val = pd.concat([positives_val, negatives_val], sort=False)
-    #selections_val.to_excel('val_selections_20230530.xlsx')
-
-    # load in the spectrogram settings
-    spec_cfg = load_audio_representation(spectro_file, name="spectrogram")
-
-    # compute spectrograms and save them into the database file
-    dbi.create_database(output_file=output_db_name, # empty brackets
-                        dataset_name='train', selections=selections_train, data_dir=data_folder,
-                        audio_repres=spec_cfg)
-
-    dbi.create_database(output_file=output_db_name,
-                        dataset_name='validation', selections=selections_val, data_dir=data_folder,
-                        audio_repres=spec_cfg)
-
-
-def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spectro_file, checkpoint_folder):
-    """
-
-    :param database_h5:
-    :param recipe:
-    :param batch_size:
-    :param n_epochs:
-    :param output_name:
-    :param spectro_file:
-    :return:
-    """
-
-    np.random.seed(1000)
-    tf.random.set_seed(2000)
-
-    db = dbi.open_file(database_h5, 'r')
-
-    train_data = dbi.open_table(db, "/train/data")
-    val_data = dbi.open_table(db, "/validation/data")
-
-    train_generator = BatchGenerator(batch_size=batch_size, data_table=train_data,
-                                     output_transform_func=ResNetInterface.transform_batch,
-                                     shuffle=True, refresh_on_epoch_end=True)
-
-    val_generator = BatchGenerator(batch_size=batch_size, data_table=val_data,
-                                   output_transform_func=ResNetInterface.transform_batch,
-                                   shuffle=True, refresh_on_epoch_end=False)
-
-    resnet = ResNetInterface.build_from_recipe_file(recipe)
-
-    resnet.train_generator = train_generator
-    resnet.val_generator = val_generator
-
-    resnet.checkpoint_dir = checkpoint_folder
-
-    resnet.train_loop(n_epochs=n_epochs, verbose=True)
-
-    db.close()
-
-    resnet.save_model(output_name, audio_repr=spectro_file)
-
-
-def create_detector(model_file, temp_model_folder, threshold, audio_folder, detections_csv, step_size, batch_size,
-                    buffer):
-
-    #gpu = tf.config.experimental.list_physical_devices('GPU')
-    #tf.config.experimental.set_memory_growth(gpu, True)
-
-    model, audio_repr = ResNetInterface.load_model_file(model_file=model_file, new_model_folder=temp_model_folder,
-                                                        load_audio_repr=True)
-
-    spec_config = audio_repr[0]['spectrogram']
-
-    audio_loader = AudioFrameLoader(path=audio_folder, duration=spec_config['duration'],
-                                    step=step_size, stop=False, representation=MagSpectrogram,
-                                    representation_params=spec_config)
-
-    detections = process(audio_loader, model=model, batch_size=batch_size, progress_bar=True,
-                         group=True, threshold=threshold, buffer=buffer)
-
-    save_detections(detections=detections, save_to=detections_csv)

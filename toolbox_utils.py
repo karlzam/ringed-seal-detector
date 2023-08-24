@@ -90,6 +90,8 @@ def plot_spectrograms(annot_file, data_dir, output_dir, plot_examples, desired_l
     rep = {'window': 0.05, 'step': 0.001, 'window_func': 'hamming', 'freq_min': 100, 'freq_max': 1200,
            'type': 'MagSpectrogram', 'duration': 5.0}
 
+    # step: 50%: 0.025
+
     # deal with merging of cells in the annotations table
     for ii in range(0, len(annot)):
         if type(annot.loc[ii][0]) == str:
@@ -163,3 +165,46 @@ def write_file_locations(input_folder, output_file_name):
     df_all = pd.DataFrame(all_files, columns=['folder', 'filename'])
     df_all.to_excel(writer, index=False)
     writer.save()
+
+def rename_ulu_2022_files(data_folder, annot):
+
+    ### rename and move files to not be in subfolders
+    '''
+    # get names of subfolders
+    subfolders = [f.path for f in os.scandir(data_folder) if f.is_dir()]
+
+    for folder in subfolders:
+
+        sub_sub_folders = [f.path for f in os.scandir(folder) if f.is_dir()]
+
+        for site_path in sub_sub_folders:
+
+            site = site_path.split('\\')[-1]
+
+            station = site_path.split('\\')[3]
+
+            file_begin = station + '_' + site + '_'
+
+            entries = os.listdir(site_path)
+
+            for entry in entries:
+                old_name = site_path + '\\' + entry
+                new_name = data_folder + '\\' + file_begin + entry
+                os.rename(old_name, new_name)
+
+    '''
+
+    ### update annotation tables
+
+    files = os.listdir(annot)
+
+    for file in files:
+        data = pd.read_csv(annot + '\\' + file, delimiter='\t')
+
+        # 'Begin Path' needs to be updated to remove the subfolders and update to new file names
+    print('test')
+
+
+
+
+
