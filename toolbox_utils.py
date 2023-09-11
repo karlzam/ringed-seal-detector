@@ -2,12 +2,14 @@ import pandas as pd
 import seaborn as sns
 pd.options.mode.chained_assignment = None
 import sys
+import librosa
 import matplotlib.pyplot as plt
 from ketos.data_handling import selection_table as sl
 from ketos.audio.spectrogram import MagSpectrogram
 from ketos.audio.audio_loader import AudioLoader, SelectionTableIterator
 import os
 import glob
+import json
 
 def plot_call_length_scatter(annotation_table, output_folder, all_combined):
     """
@@ -72,7 +74,7 @@ def call_length_scat_plot(df, output_folder, call_type):
     plt.close()
 
 
-def plot_spectrograms(annot_file, data_dir, output_dir, plot_examples, desired_label):
+def plot_spectrograms(annot_file, spec_file, data_dir, output_dir, plot_examples, desired_label):
     """
     Plot spectrograms for review
     :param annot_file: annotation file (xlsx)
@@ -85,8 +87,12 @@ def plot_spectrograms(annot_file, data_dir, output_dir, plot_examples, desired_l
 
     annot = pd.read_excel(annot_file)
 
+    # something up with loading in the spectro file
+    #f = open(spec_file)
+    #spec_info = json.load(f)
+    #rep = spec_info['spectrogram']
+
     # specify the audio representation
-    # TODO: Update to use config file instead
     rep = {'window': 0.05, 'step': 0.001, 'window_func': 'hamming', 'freq_min': 100, 'freq_max': 1200,
            'type': 'MagSpectrogram', 'duration': 5.0}
 
@@ -97,13 +103,17 @@ def plot_spectrograms(annot_file, data_dir, output_dir, plot_examples, desired_l
         if type(annot.loc[ii][0]) == str:
             filename = annot.loc[ii][0]
         else:
-            annot['filename'][ii] = filename
+            filename = annot['filename'][ii]
 
     # standardize tables
     annot_std = sl.standardize(table=annot)
+    print('table standardized? ' + str(sl.is_standardized(annot_std)))
+
+    spec_eq_length = sl.select(annotations=annot_std, length=2.0, step=1, min_overlap=0.8, center=False)
 
     # create a generator for iterating over all the selections
-    generator = SelectionTableIterator(data_dir=data_dir, selection_table=annot_std)
+    #generator = SelectionTableIterator(data_dir=data_dir, selection_table=annot_std)
+    generator = SelectionTableIterator(data_dir=data_dir, selection_table=spec_eq_length)
 
     # Create a loader by passing the generator and the representation to the AudioLoader
     loader = AudioLoader(selection_gen=generator, representation=MagSpectrogram, representation_params=rep)
@@ -135,7 +145,7 @@ def plot_spectrograms(annot_file, data_dir, output_dir, plot_examples, desired_l
                     fig = spec.plot()
                     path = output_dir
                     figname = path + "\\" + str(ii) + '.png'
-                    plt.title(spec.label + 'annot #' + str(ii), y=-0.01)
+                    plt.title(str(spec.label) + 'annot #' + str(ii), y=-0.01)
                     fig.savefig(figname)
                     plt.close(fig)
                     examples += 1
@@ -195,14 +205,51 @@ def rename_ulu_2022_files(data_folder, annot):
     '''
 
     ### update annotation tables
+    # example name: ST1_Site2_67653638.220513120735.wav
+    # column name: Begin Path
+    # column entry: D:\ringed-seal-data\Ulu_2022\ST2\Site5\67145740.220513172342.wav
 
     files = os.listdir(annot)
 
     for file in files:
         data = pd.read_csv(annot + '\\' + file, delimiter='\t')
+        data_new = pd.DataFrame()
+        for idx, row in data.iterrows():
 
-        # 'Begin Path' needs to be updated to remove the subfolders and update to new file names
-    print('test')
+            # When I updated begin path
+            #new_name = row['Begin Path'].split('\\')[0] + '\\' + row['Begin Path'].split('\\')[1] + '\\' + \
+            #           row['Begin Path'].split('\\')[2] + '\\' + row['Begin Path'].split('\\')[3] + '_' + \
+            #           row['Begin Path'].split('\\')[4] + '_' + row['Begin Path'].split('\\')[5]
+
+            #row['Begin Path'] = new_name
+
+            # updating begin file
+
+            #new_name_2 = row['Begin Path'].split('\\')[-1].split('_')[0] + '_' + \
+            #             row['Begin Path'].split('\\')[-1].split('_')[1] + '_' + row['Begin File']
+
+            #row['Begin File'] = new_name_2
+
+
+            row['Begin File'] = row['Begin Path'].split("\\")[-1]
+
+            data_new[idx] = row
+
+        data_new = data_new.swapaxes("index", "columns")
+
+        data_new.to_csv(path_or_buf = annot + '\\' + file.split('.txt')[0] + '_2.txt', sep='\t')
+
+        #... the begin file column also needs to be updated. breaking the annotation step.
+
+
+def inspect_audio_files(wav):
+
+    sig, rate = librosa.load(wav, sr=None)
+
+    return sig, rate
+
+
+
 
 
 

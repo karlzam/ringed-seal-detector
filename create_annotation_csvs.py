@@ -24,6 +24,8 @@ def concat_annot(sel_tables_folder):
             site_name = file.split('\\')[-1].split('_')[0]
         elif 'Ulukhaktok' in file:
             site_name = file.split('\\')[-1].split('_')[0] + '.' + file.split('\\')[-1].split('_')[1]
+        elif 'ulu.2022' in file:
+            site_name = 'ulu.2022'
         else:
             site_name = file.split('\\')[-1].split('_')[0] + '.' + file.split('\\')[-1].split('_')[1] + '.' + \
                         file.split('\\')[-1].split('_')[2]
@@ -157,20 +159,20 @@ def split_files(df, train_perc, val_perc, output_folder):
 
 if __name__ == "__main__":
 
-    output_dir = r'C:\Users\kzammit\Documents\Detector\20230531\inputs'
+    output_dir = r'C:\Users\kzammit\Documents\Detector\20230830\inputs'
 
     # path to folder with selection tables
     sel_table_path = r'C:\Users\kzammit\Documents\Detector\_ringed_seal_selection_tables\finished edits'
 
     # name of output selection tables excel workbook (just for reference)
-    output_file_trim = output_dir + r'\all_annot_20230531_test.xlsx'
+    output_file_trim = output_dir + r'\all_annot_20230830.xlsx'
 
     # call the trim_tables function, and set the output excel workbook file name
     # note I commented out the intermediate output file
     all_annot_orig = concat_annot(sel_table_path)
 
     # output an Excel sheet with all the annotations before splitting
-    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20230531.xlsx')
+    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20230830.xlsx')
 
     # split files into train and val csvs
     split_files(formatted_table, train_perc=0.8, val_perc=0.2, output_folder=output_dir)

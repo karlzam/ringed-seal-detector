@@ -1,3 +1,4 @@
+import ketos.audio
 import pandas as pd
 import numpy as np
 import tensorflow as tf
@@ -9,7 +10,9 @@ from ketos.data_handling.data_feeding import BatchGenerator
 from ketos.neural_networks.resnet import ResNetInterface
 from ketos.audio.spectrogram import MagSpectrogram
 from ketos.audio.audio_loader import AudioFrameLoader, AudioLoader, SelectionTableIterator
-from ketos.neural_networks.dev_utils.detection import process, save_detections
+# from ketos.neural_networks.dev_utils.detection import process, save_detections
+# from ketos.neural_networks.dev_utils.detection import save_detections
+from ketos.neural_networks.dev_utils.detection import batch_load_audio_file_data, add_detection_buffer, compute_score_running_avg, merge_overlapping_detections, filter_by_threshold, filter_by_label
 
 
 def create_database(train_csv, val_csv, length, output_db_name, spectro_file, data_folder, file_durations_file):
@@ -40,7 +43,7 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
         sl.is_standardized(std_annot_val)))
 
     # create segments of uniform length from the annotations tables
-    positives_train = sl.select(annotations=std_annot_train, length=length, step=1, min_overlap=0.8, center=False)
+    positives_train = sl.select(annotations=std_annot_train, length=length, step=0.5, min_overlap=0.8, center=False)
 
     # for training, we want more samples than we have. could do the same type of augmentation, but need to keep in mind
     # that duplication is possible in the performance metrics. same thing for the mistakes. if you want to use this
@@ -82,7 +85,7 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
                         audio_repres=spec_cfg)
 
 
-def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spectro_file, checkpoint_folder):
+def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spectro_file, checkpoint_folder, log_folder):
     """
 
     :param database_h5:
@@ -110,10 +113,12 @@ def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spe
                                    output_transform_func=ResNetInterface.transform_batch,
                                    shuffle=False, refresh_on_epoch_end=False)
 
-    resnet = ResNetInterface.build_from_recipe_file(recipe)
+    resnet = ResNetInterface.build(recipe)
 
     resnet.train_generator = train_generator
     resnet.val_generator = val_generator
+
+    resnet.log_dir = log_folder
 
     resnet.checkpoint_dir = checkpoint_folder
 
@@ -121,25 +126,60 @@ def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spe
 
     db.close()
 
-    resnet.save_model(output_name, audio_repr=spectro_file)
+    resnet.save(output_name, audio_repr_file=spectro_file)
 
 
-def create_detector(model_file, temp_model_folder, threshold, audio_folder, detections_csv, step_size, batch_size,
+def create_detector(model_file, temp_model_folder, spec_folder, threshold, audio_folder, detections_csv, step_size, batch_size,
                     buffer):
-    model, audio_repr = ResNetInterface.load_model_file(model_file=model_file, new_model_folder=temp_model_folder,
-                                                        load_audio_repr=True)
 
-    spec_config = audio_repr[0]['spectrogram']
+    model = ResNetInterface.load(model_file=model_file, new_model_folder=temp_model_folder)
+
+    audio_repr = load_audio_representation(path=spec_folder)
+
+    spec_config = audio_repr['spectrogram']
 
     audio_loader = AudioFrameLoader(path=audio_folder, duration=spec_config['duration'],
-                                    step=step_size, stop=False, representation=MagSpectrogram,
+                                    step=step_size, stop=False, representation=spec_config['type'],
                                     representation_params=spec_config)
 
-    detections = process(audio_loader, model=model, batch_size=batch_size, progress_bar=True,
-                         group=True, threshold=threshold, buffer=buffer)
+    detections = pd.DataFrame()
 
-    save_detections(detections=detections, save_to=detections_csv)
+    batch_generator = batch_load_audio_file_data(loader=audio_loader, batch_size=batch_size)
 
+    for batch_data in batch_generator:
+        # Run the model on the spectrogram data from the current batch
+        batch_predictions = model.run_on_batch(batch_data['data'], return_raw_output=True)
+
+        # Lets store our data in a dictionary
+        raw_output = {'filename': batch_data['filename'], 'start': batch_data['start'], 'end': batch_data['end'],
+                      'score': batch_predictions}
+
+        # Batch detection is already a DF
+        batch_detections = filter_by_threshold(raw_output, threshold=threshold)
+
+        # this is where the bug is
+        detections = pd.concat([detections, batch_detections], ignore_index=True)
+
+    detections_filtered = filter_by_label(detections, labels=1).reset_index(drop=True)
+
+    detections_grp = merge_overlapping_detections(detections_filtered)
+
+    print('The number of detections after filtering is ' + str(len(detections_grp)))
+
+    detections_grp.to_csv(detections_csv, index=False)
+
+
+
+
+
+
+
+
+
+
+
+
+    print('The total number of detections is ' + len(detections))
 def calc_file_durations(data_folder):
 
     # calculate the file durations
@@ -153,6 +193,9 @@ def calc_file_durations(data_folder):
 
     # moving onto corrupt ULU files
     #folders = folders[6:]
+
+    # for new ulu 2022 files
+    folders = [folders[-1]]
 
     file_durations = pd.DataFrame()
     for folder in folders:
@@ -179,5 +222,6 @@ def calc_file_durations(data_folder):
 
     #file_durations.to_excel('file_durations_minusUlu.xlsx', index=False)
 
+    file_durations.to_excel('file_durations_ulu2022.xlsx', index=False)
 
 

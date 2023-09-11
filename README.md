@@ -75,7 +75,7 @@ ______________________
 
 ## toolbox_utils.py ##
 
-- houses functions called by toolbox.py 
+- houses functions called by toolbox.py
 ______________________
 
 
