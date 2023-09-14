@@ -9,6 +9,7 @@ from ketos.audio.spectrogram import MagSpectrogram
 from ketos.audio.audio_loader import AudioLoader, SelectionTableIterator
 import os
 import glob
+import shutil
 import json
 
 def plot_call_length_scatter(annotation_table, output_folder, all_combined):
@@ -247,6 +248,21 @@ def inspect_audio_files(wav):
     sig, rate = librosa.load(wav, sr=None)
 
     return sig, rate
+
+def copy_audio_files(val_csv, audio_folder):
+    """
+
+    :param val_csv:
+    :param audio_folder:
+    :return:
+    """
+
+    validation_files = pd.read_csv(val_csv)
+
+    for idex, row in validation_files.iterrows():
+        shutil.copyfile(validation_files.loc[idex]['filename'], audio_folder + '\\' +
+                        validation_files.loc[idex]['filename'].split('\\')[-1])
+
 
 
 

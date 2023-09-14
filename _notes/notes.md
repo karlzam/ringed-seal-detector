@@ -1,17 +1,37 @@
 # Notes for Detector #
+(file started Sept 11)
+
+## Q's for Fabio ##
+
+1. How to evaluate performance metrics for the data?
+
+______________________
 
 ## To do's ##
 
+- Edit script so it drops selections with negative start times
 - Understand Nyquist frequency and why the max plot is half the sampling rate
-- Look at Farid's SNR work 
 - Calculate spectrogram stats
 - Create manual datasets
+- Create a read the docs for all of my notes:
+  - https://docs.readthedocs.io/en/stable/tutorial/
+  - https://readthedocs.org/dashboard/
+  - Logged in with github account
+- Create yml file for ketos 2.7 and backup to git
+______________________
+
+## Completed ##
+
+- Edit selection table creator to drop selections that end after the file has ended 
+- Create script to grab audio files from the validation file for the audio folder 
+- Generate a random split database with all of the annotations and see how that detector works
+
 ______________________
 
 ## Long Term Goals ##
 
-- Thorough walk through of code and make sure you understand every single line
-- Generate a random split database with all of the annotations and see how that detector works
+- Thorough walk through of code and make sure you understand every single line 
+- Look at Farid's SNR work
 - Calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
 - Create manual database; go through the data and look at really good ones, talk to Fabio and Sebastien about this
 - Run detector on the manual database 
@@ -59,5 +79,18 @@ ______________________
 - BatchGenerator: refresh on epoch end, if you organized the samples in a specific way, don't shuffle
 - Process: need to make sure that annotations aren't being counted twice, maybe the group keyword? Look into this more
 - Create_detector: for a 2 second duration, the maximum step size should be 2 seconds. If you do 3, you'll be missing 1 second of data. You'd want to do a step size smaller than 2 seconds typically because that would mean you wouldn't miss calls that are sitting on the border of two spectrograms, but this also increases duplicate counting. Need to merge detections so we're not double counting. The buffer adds a certain amount of time to the section it's looking at. The batch size is purely for computational reasons, instead of loading the entire wav files which are ginormous you can load X spectrograms at a time. Can probably remove batch size from my scripts because I have so little data  
-
+- Augmentation in create database step: for training, we want more samples than we have. could do the same type of augmentation, but need to keep in mind that duplication is possible in the performance metrics. same thing for the mistakes. if you want to use this model for individual calls, might be easier to not use augmentation. for a binary detector, ok to do augmentation.
 ______________________
+
+## Selection Tables ##
+
+- Sept 12 2023: ST2, Site 27, found minor error where yelps where marked as 'keep for detector', fixed and updated repo 
+- Ulu files: original subfolder structure had multilayers, updated and renamed files to have the site name and station at the front of each file 
+  - because of this, had to change the filename and begin path in each annotation file, done by script. This is why they say "path updated"
+______________________
+
+## Training Definitions ##
+
+- train: used in training
+- validation: used in training
+- test: NOT USED IN TRAINING

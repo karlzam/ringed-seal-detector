@@ -44,15 +44,9 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
 
     # create segments of uniform length from the annotations tables
     positives_train = sl.select(annotations=std_annot_train, length=length, step=0.5, min_overlap=0.8, center=False)
-
-    # for training, we want more samples than we have. could do the same type of augmentation, but need to keep in mind
-    # that duplication is possible in the performance metrics. same thing for the mistakes. if you want to use this
-    # model for individual calls, might be easier to not use augmentation. for a binary detector, ok to do
-    # augmentation.
     positives_val = sl.select(annotations=std_annot_val, length=length, step=0.0, center=False)
 
     # read in the file durations file
-    #file_durations = pd.read_excel(r'C:\Users\kzammit\Documents\Detector\20230606\inputs\all_file_durations.xlsx')
     file_durations = pd.read_excel(file_durations_file)
 
     # drop rows in file durations that do not correspond to those wav files
@@ -65,6 +59,13 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
 
     negatives_val = sl.create_rndm_selections(annotations=std_annot_val, files=file_durations_val,
                                               length=length, num=len(positives_val), trim_table=True)
+
+    # drop selections that go past the end of the file
+    positives_train = drop_out_of_bounds_sel(positives_train, file_durations_train)
+    positives_val = drop_out_of_bounds_sel(positives_val, file_durations_val)
+
+    negatives_train = drop_out_of_bounds_sel(negatives_train, file_durations_train)
+    negatives_val = drop_out_of_bounds_sel(negatives_val, file_durations_val)
 
     # join the positive and negative vals together
     selections_train = pd.concat([positives_train, negatives_train], sort=False)
@@ -84,6 +85,36 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
                         dataset_name='validation', selections=selections_val, data_dir=data_folder,
                         audio_repres=spec_cfg)
 
+
+def drop_out_of_bounds_sel(sel_table, file_durations):
+    print('The length of df before dropping is ' + str(len(sel_table)))
+    # add step here to drop selections past the end of the file
+    # train
+
+    # undo the multiindex for easier working
+    sel_table = sel_table.reset_index(level=['filename', 'sel_id'])
+    drop_rows_after = []
+    drop_rows_before = []
+
+    for idex, row in sel_table.iterrows():
+
+        # filename is row[0], end time is idex.end
+        index = file_durations.loc[file_durations['filename'] == row.filename].index[0]
+        duration = file_durations['duration'][index]
+
+        if duration < row.end:
+            # drop the row corresponding to that sel_id and filename from the dataframe
+            drop_rows_after.append(idex)
+
+    print('The number of rows to drop is ' + str(len(drop_rows_after)))
+    sel_table = sel_table.drop(drop_rows_after)
+
+    print('The new length of sel table is ' + str(len(sel_table)))
+
+    # remake the multiindex
+    sel_table = sel_table.set_index(['filename', 'sel_id'])
+
+    return sel_table
 
 def train_classifier(database_h5, recipe, batch_size, n_epochs, output_name, spectro_file, checkpoint_folder, log_folder):
     """
@@ -140,7 +171,7 @@ def create_detector(model_file, temp_model_folder, spec_folder, threshold, audio
 
     audio_loader = AudioFrameLoader(path=audio_folder, duration=spec_config['duration'],
                                     step=step_size, stop=False, representation=spec_config['type'],
-                                    representation_params=spec_config)
+                                    representation_params=spec_config, pad=False)
 
     detections = pd.DataFrame()
 
@@ -154,10 +185,8 @@ def create_detector(model_file, temp_model_folder, spec_folder, threshold, audio
         raw_output = {'filename': batch_data['filename'], 'start': batch_data['start'], 'end': batch_data['end'],
                       'score': batch_predictions}
 
-        # Batch detection is already a DF
         batch_detections = filter_by_threshold(raw_output, threshold=threshold)
 
-        # this is where the bug is
         detections = pd.concat([detections, batch_detections], ignore_index=True)
 
     detections_filtered = filter_by_label(detections, labels=1).reset_index(drop=True)
@@ -169,17 +198,35 @@ def create_detector(model_file, temp_model_folder, spec_folder, threshold, audio
     detections_grp.to_csv(detections_csv, index=False)
 
 
+def compare(annotations, detections):
+
+    detected_list = []
+
+    annotations = pd.read_csv(annotations)
+    detections = pd.read_csv(detections)
+
+    for idx, row in annotations.iterrows():  # loop over annotations
+        filename_annot = row['filename'].split("\\")[-1]
+        time_annot_start = row['start']
+        time_annot_end = row['end']
+        detected = False
+        for _, d in detections.iterrows():  # loop over detections
+            filename_det = d['filename']
+            start_det = d['start']
+            end_det = start_det + d['end']
+            # if the filenames match and the annotated time falls with the start and
+            # end time of the detection interval, consider the call detected
+            if filename_annot == filename_det and time_annot_start >= start_det and time_annot_end <= end_det:
+                detected = True
+                break
+
+        detected_list.append(detected)
+
+    annotations['detected'] = detected_list  # add column to the annotations table
+
+    return annotations
 
 
-
-
-
-
-
-
-
-
-    print('The total number of detections is ' + len(detections))
 def calc_file_durations(data_folder):
 
     # calculate the file durations
@@ -224,4 +271,33 @@ def calc_file_durations(data_folder):
 
     file_durations.to_excel('file_durations_ulu2022.xlsx', index=False)
 
+# doesn't work, delete
+def compare_false(annotations, detections):
 
+    detected_list = []
+
+    annotations = pd.read_csv(annotations)
+    detections = pd.read_csv(detections)
+
+    for idx, row in detections.iterrows():
+        filename_det = row['filename']
+        start_det = row['start']
+        end_det = start_det + row['end']
+        detected = False
+        for _, a in annotations.iterrows():
+            filename_annot = row['filename'].split("\\")[-1]
+            time_annot_start = row['start']
+            time_annot_end = row['end']
+            if filename_det == filename_annot and start_det < time_annot_start and end_det < time_annot_start:
+                detected = 'FPB'
+                break
+            elif filename_det == filename_annot and start_det > time_annot_end and end_det > time_annot_end:
+                detected = 'FPA'
+                break
+
+        detected_list.append(detected)
+
+    detections['detected'] = detected_list
+
+
+    print('test')

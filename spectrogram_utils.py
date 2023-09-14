@@ -79,11 +79,26 @@ def plot_spectrogram(annot, loader, output_dir):
         spec.plot()
         fig = spec.plot()
         path = output_dir
-        figname = path + "\\" + str(ii) + '-rate2000.png'
-        plt.title(str(spec.label) + ', annot #' + str(ii), y=-0.01)
+        figname = path + "\\" + str(ii) + '.png'
+        #plt.title(str(spec.label) + ', annot #' + str(ii), y=-0.01)
         fig.savefig(figname)
         fig.show()
         plt.close(fig)
+
+
+    """
+    spec = next(loader)
+    print('plotting annot #' + str(annot))
+    spec.plot()
+    fig = spec.plot()
+    path = output_dir
+    figname = path + "\\" + str(0) + '.png'
+    #plt.title(str(spec.label) + ', annot #' + str(0), y=-0.01)
+    fig.savefig(figname)
+    fig.show()
+    plt.close(fig)
+    """
+
 
 def old_plot_spectrogram(annot, loader, output_dir, plot_examples, desired_label):
     """
