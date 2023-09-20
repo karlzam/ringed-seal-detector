@@ -3,11 +3,11 @@ from meridian_utils import train_classifier
 main_folder = r'C:\Users\kzammit\Documents\Detector\20230913'
 inputs_folder = main_folder + '\\' + 'inputs'
 spec_name = 'spec_config.json'
-db_name = r'database_20230913.h5'
+db_name = r'database_20230920.h5'
 checkpoint_folder = main_folder + '\\' + 'checkpoints'
 log_folder = main_folder + '\\' + 'logs'
 recipe_name = 'resnet_recipe.json'
-classifier_name = 'rs-20230913.kt'
+classifier_name = 'rs-20230920.kt'
 
 
 # create classifier .kt file containing the trained detector, with recipe and spectro files attached

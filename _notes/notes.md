@@ -4,11 +4,16 @@
 ## Q's for Fabio ##
 
 1. How to evaluate performance metrics for the data?
+2. How to calculate false positives from the detections sheet? 
+3. Double check my work is correct? Forced all labels to be "1", so B and BY are both the same, dropped G
 
 ______________________
 
 ## To do's ##
 
+- Do pyTables tutorial
+  - https://www.pytables.org/usersguide/tutorials.html 
+- Create script that calcs FP, TP, FN, TN
 - Edit script so it drops selections with negative start times
 - Understand Nyquist frequency and why the max plot is half the sampling rate
 - Calculate spectrogram stats
@@ -37,6 +42,16 @@ ______________________
 - Run detector on the manual database 
 - Run detector with different spectrogram configs  
 - Look at new architecture with Sebastien  
+______________________
+
+## Project Notes ##
+
+- Motivation: 
+  - Seasonal patterns
+  - Spatial patterns
+  - AIS/boat
+  - Measuring underwater noise, vulnerability stress to UW noise
+
 ______________________
 
 ## Spectrograms ##
@@ -94,3 +109,14 @@ ______________________
 - train: used in training
 - validation: used in training
 - test: NOT USED IN TRAINING
+
+## Performance Metrics ## 
+- running average would make FP rate drop
+- ketos run: on either audio files, or a database
+- for each spectro (row in file), pass it into the model, and get the score w threshold
+- using the test set in the database, you would have equal number of pos/negs
+- if you do it this way, you'll have unbalanced samples bc it goes over the full file
+- future: new audio files, have to compare annotation table to detections
+- when computing metrics, taking annotations as a reference, output of model compared to reference
+- compare original annotation performance to edited annotation performance
+- pyTables tutorials: hdf5 tables has many examples

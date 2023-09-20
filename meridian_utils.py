@@ -3,10 +3,13 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 import os
+import csv
+import matplotlib.pyplot as plt
+import seaborn as sn
 from ketos.data_handling import selection_table as sl
 import ketos.data_handling.database_interface as dbi
 from ketos.data_handling.parsing import load_audio_representation
-from ketos.data_handling.data_feeding import BatchGenerator
+from ketos.data_handling.data_feeding import BatchGenerator, JointBatchGen
 from ketos.neural_networks.resnet import ResNetInterface
 from ketos.audio.spectrogram import MagSpectrogram
 from ketos.audio.audio_loader import AudioFrameLoader, AudioLoader, SelectionTableIterator
@@ -15,7 +18,7 @@ from ketos.audio.audio_loader import AudioFrameLoader, AudioLoader, SelectionTab
 from ketos.neural_networks.dev_utils.detection import batch_load_audio_file_data, add_detection_buffer, compute_score_running_avg, merge_overlapping_detections, filter_by_threshold, filter_by_label
 
 
-def create_database(train_csv, val_csv, length, output_db_name, spectro_file, data_folder, file_durations_file):
+def create_database(train_csv, val_csv, test_csv, length, output_db_name, spectro_file, data_folder, file_durations_file):
     """
     Create a database of spectrograms for the training and validation datasets from annotation table .csv files
     :param train_csv: annotation table for the training data in .csv format (; delimited)
@@ -28,23 +31,29 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     # read in the training and validation annotation csv files
     annot_train = pd.read_csv(train_csv)
     annot_val = pd.read_csv(val_csv)
+    annot_test = pd.read_csv(test_csv)
 
     # standardize the training and validation annotation csv files to ketos format
     std_annot_train = sl.standardize(table=annot_train, labels=["B", "BY"], start_labels_at_1=True, trim_table=True)
-
     # force labels all to be 1 for binary classification
     std_annot_train['label'] = std_annot_train['label'].replace(2, 1)
-    print('Remember youre forcing all labels to be 1! Training data standardized? ' + str(
-        sl.is_standardized(std_annot_train)))
 
     std_annot_val = sl.standardize(table=annot_val, labels=["B", "BY"], start_labels_at_1=True, trim_table=True)
     std_annot_val['label'] = std_annot_val['label'].replace(2, 1)
-    print('Remember youre forcing all labels to be 1! Validation data standardized? ' + str(
-        sl.is_standardized(std_annot_val)))
+
+    std_annot_test = sl.standardize(table=annot_test, labels=["B", "BY"], start_labels_at_1=True, trim_table=True)
+    std_annot_test['label'] = std_annot_test['label'].replace(2, 1)
+
+    print('Remember you are forcing all labels to be 1!')
+    print('Training data standardized? ' + str(sl.is_standardized(std_annot_train)))
+    print('Validation data standardized? ' + str(sl.is_standardized(std_annot_val)))
+    print('Testing data standardized? ' + str(sl.is_standardized(std_annot_test)))
+
 
     # create segments of uniform length from the annotations tables
     positives_train = sl.select(annotations=std_annot_train, length=length, step=0.5, min_overlap=0.8, center=False)
     positives_val = sl.select(annotations=std_annot_val, length=length, step=0.0, center=False)
+    positives_test = sl.select(annotations=std_annot_test, length=length, step=0.0, center=False)
 
     # read in the file durations file
     file_durations = pd.read_excel(file_durations_file)
@@ -52,6 +61,7 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     # drop rows in file durations that do not correspond to those wav files
     file_durations_train = file_durations[file_durations['filename'].isin(annot_train['filename'])]
     file_durations_val = file_durations[file_durations['filename'].isin(annot_val['filename'])]
+    file_durations_test = file_durations[file_durations['filename'].isin(annot_test['filename'])]
 
     # generate negative segments (the same number as the positive segments),
     negatives_train = sl.create_rndm_selections(annotations=std_annot_train, files=file_durations_train,
@@ -60,18 +70,27 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     negatives_val = sl.create_rndm_selections(annotations=std_annot_val, files=file_durations_val,
                                               length=length, num=len(positives_val), trim_table=True)
 
+    negatives_test = sl.create_rndm_selections(annotations=std_annot_test, files=file_durations_test,
+                                              length=length, num=len(positives_test), trim_table=True)
+
     # drop selections that go past the end of the file
     positives_train = drop_out_of_bounds_sel(positives_train, file_durations_train)
     positives_val = drop_out_of_bounds_sel(positives_val, file_durations_val)
+    positives_test = drop_out_of_bounds_sel(positives_test, file_durations_test)
 
     negatives_train = drop_out_of_bounds_sel(negatives_train, file_durations_train)
     negatives_val = drop_out_of_bounds_sel(negatives_val, file_durations_val)
+    negatives_test = drop_out_of_bounds_sel(negatives_test, file_durations_test)
 
     # join the positive and negative vals together
     selections_train = pd.concat([positives_train, negatives_train], sort=False)
-    selections_train.to_excel(r'C:\Users\kzammit\Documents\Detector\20230606\train_selections_20230606.xlsx')
+    selections_train.to_excel(r'C:\Users\kzammit\Documents\Detector\20230913\inputs\train_selections_20230920.xlsx')
+
     selections_val = pd.concat([positives_val, negatives_val], sort=False)
-    selections_val.to_excel(r'C:\Users\kzammit\Documents\Detector\20230606\val_selections_20230606.xlsx')
+    selections_val.to_excel(r'C:\Users\kzammit\Documents\Detector\20230913\inputs\val_selections_20230920.xlsx')
+
+    selections_test = pd.concat([positives_test, negatives_test], sort=False)
+    selections_test.to_excel(r'C:\Users\kzammit\Documents\Detector\20230913\inputs\test_selections_20230920.xlsx')
 
     # load in the spectrogram settings
     spec_cfg = load_audio_representation(spectro_file, name="spectrogram")
@@ -84,6 +103,12 @@ def create_database(train_csv, val_csv, length, output_db_name, spectro_file, da
     dbi.create_database(output_file=output_db_name,
                         dataset_name='validation', selections=selections_val, data_dir=data_folder,
                         audio_repres=spec_cfg)
+
+    dbi.create_database(output_file=output_db_name,
+                        dataset_name='test', selections=selections_test, data_dir=data_folder,
+                        audio_repres=spec_cfg)
+
+    # create a new selection table for the test set - Fabio recommends for testing the model during development
 
 
 def drop_out_of_bounds_sel(sel_table, file_durations):
@@ -187,15 +212,17 @@ def create_detector(model_file, temp_model_folder, spec_folder, threshold, audio
 
         batch_detections = filter_by_threshold(raw_output, threshold=threshold)
 
+        # What do these labels represent? Is it 0 for no, and 1 for yes? why is 0 included in the
         detections = pd.concat([detections, batch_detections], ignore_index=True)
 
-    detections_filtered = filter_by_label(detections, labels=1).reset_index(drop=True)
+    # detections_filtered = filter_by_label(detections, labels=1).reset_index(drop=True)
 
-    detections_grp = merge_overlapping_detections(detections_filtered)
+    #detections_grp = merge_overlapping_detections(detections_filtered)
 
-    print('The number of detections after filtering is ' + str(len(detections_grp)))
+    #print('The number of detections after filtering is ' + str(len(detections_grp)))
 
-    detections_grp.to_csv(detections_csv, index=False)
+    #detections_grp.to_csv(detections_csv, index=False)
+    detections.to_csv(detections_csv, index=False)
 
 
 def compare(annotations, detections):
@@ -271,33 +298,147 @@ def calc_file_durations(data_folder):
 
     file_durations.to_excel('file_durations_ulu2022.xlsx', index=False)
 
-# doesn't work, delete
-def compare_false(annotations, detections):
 
-    detected_list = []
+def compute_detections(labels, scores, threshold=0.5):
+    predictions = np.where(scores >= threshold, 1,0)
 
-    annotations = pd.read_csv(annotations)
-    detections = pd.read_csv(detections)
+    TP = tf.math.count_nonzero(predictions * labels).numpy()
+    TN = tf.math.count_nonzero((predictions - 1) * (labels - 1)).numpy()
+    FP = tf.math.count_nonzero(predictions * (labels - 1)).numpy()
+    FN = tf.math.count_nonzero((predictions - 1) * labels).numpy()
 
-    for idx, row in detections.iterrows():
-        filename_det = row['filename']
-        start_det = row['start']
-        end_det = start_det + row['end']
-        detected = False
-        for _, a in annotations.iterrows():
-            filename_annot = row['filename'].split("\\")[-1]
-            time_annot_start = row['start']
-            time_annot_end = row['end']
-            if filename_det == filename_annot and start_det < time_annot_start and end_det < time_annot_start:
-                detected = 'FPB'
-                break
-            elif filename_det == filename_annot and start_det > time_annot_end and end_det > time_annot_end:
-                detected = 'FPA'
-                break
+    return predictions, TP, TN, FP, FN
 
-        detected_list.append(detected)
+def compute_model_outcome(model, db, new_model_folder, output_dir, batch_size, threshold):
 
-    detections['detected'] = detected_list
+    # Open the database file
+    db = dbi.open_file(db, 'r')
+
+    # Load the trained model
+    model = ResNetInterface.load(model, load_audio_repr=False, new_model_folder=new_model_folder)
+
+    # The root name in the database is slash
+    table_name = '/'
+
+    # Open the table in the database at the root level
+    table = dbi.open_table(db, table_name)
+
+    # Convert the data to the correct format for the model, and generate batches of data
+    gens = []
+
+    # not sure?
+    batch_size = int(batch_size / sum(1 for _ in db.walk_nodes(table, "Table")))
+
+    # for each dataset (I think?), ie. train/test/val
+    for group in db.walk_nodes(table, "Table"):
+        generator = BatchGenerator(batch_size=batch_size, data_table=group,
+                                   output_transform_func=ResNetInterface.transform_batch, shuffle=False,
+                                   refresh_on_epoch_end=False, x_field='data', return_batch_ids=True)
+
+        # attach the batches together? so there's one for each dataset
+        gens.append(generator)
+
+    # isn't this using the training/val/and testing data to compute these metrics? prolly not what you want to do?
+    gen = JointBatchGen(gens, n_batches='min', shuffle_batch=False, reset_generators=False, return_batch_ids=True)
+
+    scores = []
+    labels = []
+
+    for batch_id in range(gen.n_batches):
+        hdf5_ids, batch_X, batch_Y = next(gen)
+
+        batch_labels = np.argmax(batch_Y, axis=1)
+
+        batch_scores = model.model.predict_on_batch(batch_X)[:,1] # will return the scores for just one class (with label 1)
+        #batch_scores = model.model.predict_on_batch(batch_X)
+
+        scores.extend(batch_scores)
+        labels.extend(batch_labels)
+
+    labels = np.array(labels)
+    scores = np.array(scores)
+
+    print('Length of labels is ' + str(len(labels)))
+
+    # 20519 : training example length
+    # 1701: val example length
+    # 848: test example length
+
+    predicted, TP, TN, FP, FN = compute_detections(labels, scores, threshold)
+
+    print(f'\nSaving detections output to {output_dir}/')
+
+    # TODO: I currently have an error in here - it's outputting the batch result, which I think makes sense.
+    # Later on, it tries to append the labels field to the df result but it's not the right size (understandably).
+    # I'm not sure how this section ran for Ruwan or what's different about mine.
+    #df_group = pd.DataFrame()
+    #for group in db.walk_nodes(table, "Table"):
+    #    df = pd.DataFrame({'id': group[:]['id'], 'filename': group[:]['filename']})
+        #df = pd.DataFrame({'id': group[:]['id'], 'filename': group[:]['filename'], 'label_true': group[:]['label']})
+        #temp_df = df.loc[(df['label_true'] == 1)]
+        # df_group = pd.concat([df_group, df], ignore_index=True)
+        # df_group = pd.concat([df_group, temp_df], ignore_index=True)
+    #    df_group = pd.concat([df_group, df], ignore_index=True)
+    #df_group['label'] = labels[:]
+    #df_group['predicted'] = predicted[:]
+    #df_group['score'] = scores[:]
+    #df_group.to_csv(os.path.join(os.getcwd(), output_dir, "classifcations.csv"), mode='w', index=False)
+
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    f1 = 2 * precision * recall / (precision + recall)
+    FPP = FP / (TN + FP)
+    confusion_matrix = [[TP, FN], [FP, TN]]
+    print(f'\nPrecision: {precision}')
+    print(f'Recall: {recall}')
+    print(f'F1 Score: {f1}')
+    print('\nConfusionMatrix:')
+    print('\n[TP, FN]')
+    print('[FP, TN]')
+    print(f'{confusion_matrix[0]}')
+    print(f'{confusion_matrix[1]}')
+
+    print(f"\nSaving metrics to {output_dir}/")
+
+    # Saving precision recall and F1 Score for the defined thrshold
+    metrics = {'Precision': [precision], 'Recall': [recall], "F1 Score": [f1]}
+    metrics_df = pd.DataFrame(data=metrics)
+
+    metrics_df.to_csv(os.path.join(os.getcwd(), output_dir, "metrics.csv"), mode='w', index=False)
+
+    # Appending a confusion matrix to the file
+    row1 = ["Confusion Matrix", "Predicted"]
+    row2 = ["Actual", "RS", "Background Noise"]
+    row3 = ["RS", TP, FN]
+    row4 = ["Background Noise", FP, TN]
+    with open(os.path.join(os.getcwd(), output_dir, "metrics.csv"), 'a', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        writer.writerow([])
+        writer.writerow(row1)
+        writer.writerow(row2)
+        writer.writerow(row3)
+        writer.writerow(row4)
+
+    db.close()
+
+    #make_confusion_matrix(TP, FN, FP, TN)
+
+
+def make_confusion_matrix(metrics_file):
+
+    metrics = pd.read_csv(metrics_file)
+
+    TP = int(metrics.loc[3]['Recall'])
+    FN = int(metrics.loc[3]['F1 Score'])
+    FP = int(metrics.loc[4]['Recall'])
+    TN = int(metrics.loc[4]['F1 Score'])
+
+    array = [[TP, FN], [FP, TN]]
+
+
+    sn.heatmap(array)
 
 
     print('test')
+
+
