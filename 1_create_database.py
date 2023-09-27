@@ -1,4 +1,5 @@
-from meridian_utils import create_database, calc_file_durations
+from meridian_utils import create_database
+from toolbox_utils import calc_file_durations
 
 main_folder = r'C:\Users\kzammit\Documents\Detector\20230913'
 inputs_folder = main_folder + '\\' + 'inputs'

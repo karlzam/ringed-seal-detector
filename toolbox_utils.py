@@ -12,6 +12,56 @@ import glob
 import shutil
 import json
 
+def calc_file_durations(data_folder):
+    """
+
+    :param data_folder:
+    :return:
+    """
+
+    # calculate the file durations
+    # file_durations_val = sl.file_duration_table(data_folder)
+    # file_durations_train = sl.file_duration_table(data_folder)
+
+    folders = [f.path for f in os.scandir(data_folder) if f.is_dir()]
+
+    # temp fix to get around corrupt ULU files
+    #folders = folders[0:6]
+
+    # moving onto corrupt ULU files
+    #folders = folders[6:]
+
+    # for new ulu 2022 files
+    folders = [folders[-1]]
+
+    file_durations = pd.DataFrame()
+    for folder in folders:
+
+        folder_name = folder.split('\\')[-1]
+
+        # get the durations for all the files within this folder
+        file_durations_for_folder = sl.file_duration_table(data_folder + "\\" + str(folder_name))
+
+        # it only keeps the wav filename, need to append the path back onto it I think? Let's try that
+        file_durations_for_folder['fixed_filename'] = folder + "\\" + file_durations_for_folder['filename']
+
+        # drop the og filename column
+        file_durations_for_folder = file_durations_for_folder.drop(['filename'], axis=1)
+
+        # rename the appended filename
+        file_durations_for_folder = file_durations_for_folder.rename(columns={'fixed_filename': 'filename'})
+
+        #file_durations = file_durations.append(sl.file_duration_table(data_folder + "\\" + str(folder_name)))
+        file_durations = file_durations.append(file_durations_for_folder)
+
+    #print(len(file_durations))
+    #file_durations.to_excel('Ulu_durations.xlsx', index=False)
+
+    #file_durations.to_excel('file_durations_minusUlu.xlsx', index=False)
+
+    file_durations.to_excel('file_durations_ulu2022.xlsx', index=False)
+
+
 def plot_call_length_scatter(annotation_table, output_folder, all_combined):
     """
     Plot a scatter plot for call lengths, calling the call_length_scat_plot function
@@ -244,6 +294,11 @@ def rename_ulu_2022_files(data_folder, annot):
 
 
 def inspect_audio_files(wav):
+    """
+
+    :param wav:
+    :return:
+    """
 
     sig, rate = librosa.load(wav, sr=None)
 
