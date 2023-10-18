@@ -1,47 +1,48 @@
 # Notes for Detector #
 (file started Sept 11)
 
-## Q's for Fabio ##
-
-1. How to evaluate performance metrics for the data?
-2. How to calculate false positives from the detections sheet? 
-3. Double check my work is correct? Forced all labels to be "1", so B and BY are both the same, dropped G
-
-______________________
-
 ## To do's ##
 
+- Run scripts for multiple spectro test 
+- Create yml file for ketos 2.7 and back up
+- Edit database script so it drops selections with negative start times
+- Calculate stats about annotations: 
+  - monthly distribution 
+  - how many are from each region 
+  - calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
+- Create manual databases: 
+  - Tries to balance site information (generalization)
+  - Tries to balance time of year information (mimic reality?)
+  - Manually verify all spectros created from annotations and figure out how to remove errors
+- Run test that's identical to ones run before just with the new database 
+- Understand the model architecture you're currently using
+- Run many tests similar to what Ruwan did: 
+  - Spectrogram settings 
+  - Hyperparameter tuning
+- Run detector on the manual database 
+  - Create manual database; go through the data and look at good ones, talk to Fabio and Sebastien about this
+- Run detector with different spectrogram configs  
+
+### Long Term To Do's ###
 - Do pyTables tutorial
-  - https://www.pytables.org/usersguide/tutorials.html 
-- Create script that calcs FP, TP, FN, TN
-- Edit script so it drops selections with negative start times
+  - https://www.pytables.org/usersguide/tutorials.html
 - Understand Nyquist frequency and why the max plot is half the sampling rate
-- Calculate spectrogram stats
-- Create manual datasets
 - Create a read the docs for all of my notes:
   - https://docs.readthedocs.io/en/stable/tutorial/
   - https://readthedocs.org/dashboard/
   - Logged in with github account
-- Create yml file for ketos 2.7 and backup to git
+- Look at Farid's SNR work
+- Look at new architecture with Sebastien  
+- Try YOLO using PyTorch
+  - Understand how to read hdf5 file for use in PyTorch
 ______________________
 
 ## Completed ##
-
 - Edit selection table creator to drop selections that end after the file has ended 
 - Create script to grab audio files from the validation file for the audio folder 
 - Generate a random split database with all of the annotations and see how that detector works
-
-______________________
-
-## Long Term Goals ##
-
-- Thorough walk through of code and make sure you understand every single line 
-- Look at Farid's SNR work
-- Calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
-- Create manual database; go through the data and look at really good ones, talk to Fabio and Sebastien about this
-- Run detector on the manual database 
-- Run detector with different spectrogram configs  
-- Look at new architecture with Sebastien  
+- Create script that calcs FP, TP, FN, TN
+- 
 ______________________
 
 ## Project Notes ##
@@ -78,6 +79,29 @@ ______________________
 ## Architecture ##
 
 - Fabio was saying this is a "data centric" problem and should focus more on the data than the model architecture  
+- From Fabio: 
+  - The number of layers depends on the number of blocks. 
+  - In our implementation, the block sets are defined as a list. I think Ruwan used [2,2,2], which means 3 block sets with 2 blocks each, resulting in 6 residual blocks. 
+  - Each block in our implementation can have 2 or 3 convolutional layers, depending on whether it is a residual block or not. 
+  - For example, the first block of a set is not a residual block. And none of the blocks in the first set are either. Y
+  - You can look at the code to know exactly how this is determined, but [2,2,2] would result in 15 convolutional layers, plus one dense layer to do the classification in the end.
+
+Code that goes through the layers in a resnet object and returns number of convolutional layers
+from tensorflow.keras.layers import Conv2D
+def count_conv_layers(resnet):
+ 
+         arch = resnet.model 
+         n_conv2D =1
+     
+         for b in arch.layers[1].layers:
+              for l in b.layers:
+                  if isinstance(l, Conv2D):
+                      n_conv2D+=1
+         
+      return n_conv2D
+
+- resnet is an instance of the ketos ResNetInterface class
+- A block set=[1,2,2,2] would result in 18 convolutional layers (+ 1 dense for classification)
 
 ______________________
 
@@ -120,3 +144,12 @@ ______________________
 - when computing metrics, taking annotations as a reference, output of model compared to reference
 - compare original annotation performance to edited annotation performance
 - pyTables tutorials: hdf5 tables has many examples
+
+## Overfitting ##
+- Overfitting is always an important consideration (regardless of the ratio between parameters and number of samples). 
+- Checking for overfitting is one of the main reasons you have a validation set. 
+- So in short that's basically how you know it's not overfitting, by comparing training curves on the train/validation sets during development.  
+- That's a bit simplified, because you need to consider the distributions of these datasets, and sometimes it's difficult when you have limited data, but that's a main tool to diagnose overfitting. 
+- Here is a blog post talking a little more about it: https://machinelearningmastery.com/learning-curves-for-diagnosing-machine-learning-model-performance/
+
+
