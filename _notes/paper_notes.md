@@ -35,4 +35,4 @@ Notes:
 - Statement about not enhancing SNR before feeding to neural network
 - Quasi-random time shifts are desirable for DNN classifier bc they encourage network to learn a more general, time translation invariant, representation of the upcall 
 
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+![plot](images\kirsebom.png)
