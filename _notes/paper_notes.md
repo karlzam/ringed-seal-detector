@@ -56,8 +56,20 @@ Structure of paper:
     - had a temporal buffer
     - false positive when annotated overlap was less than 50%
 - Results of detection and classification tasks
-  - 
+  - 9 independent training sessions 
+  - looked at increasing size of dataset 
+  - looked at discarding low SNR samples
+  - plots of precision and recall vs LDA
 - Summary & conclusion
+  - Discussion:
+    - DNN have larger capacity to handle variance in the data than LDA
+    - General review on what was already talked about
+    - Results summarized
+    - A brief discussion on papers that were released during the writing of their paper
+  - Conclusion: 
+    - Shown that DNNs work for the task
+    - improved performance by expanding variance of dataset
+    - "consider a wider temporal context"
 
 Notes:
 - Classical methods plateau at 50% recall when false detections are kept below 10%
