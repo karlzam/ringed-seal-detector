@@ -9,6 +9,12 @@
   - Create a graphic to help understand this - ie. histogram
 - Start writing thesis
 
+### Nov-1-2023 ###
+- Wrote script and output plots for annotation stats, both time and site dependent 
+- Updated all dates to correct dates for PP, CB300, CB50
+- Next step is to create a manual database
+- Currently shows very heavily weighted to 2022 ulu data, discuss w Bill
+
 ### Oct-31-2023 ###
 - Read COD paper (DONE)
 - Read NARW paper again
