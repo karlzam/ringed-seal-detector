@@ -124,13 +124,13 @@ def split_files(df, output_folder):
 
 if __name__ == "__main__":
 
-    output_dir = r'C:\Users\kzammit\Documents\Detector\20230913\inputs'
+    output_dir = r'C:\Users\kzammit\Documents\Detector\annotation_stats'
 
     # path to folder with selection tables
-    sel_table_path = r'D:\ringed_seal_selection_tables'
+    sel_table_path = r'C:\Users\kzammit\Documents\Detector\annotation_stats\selection_tables'
 
     # name of output selection tables excel workbook (just for reference)
-    output_file_trim = output_dir + r'\all_annot_20230913.xlsx'
+    output_file_trim = output_dir + r'\all_annotations.xlsx'
 
     # call the trim_tables function, and set the output excel workbook file name
     # note I commented out the intermediate output file
