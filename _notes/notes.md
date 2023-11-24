@@ -3,11 +3,8 @@
 
 ## To do's ##
 
+- Update scripts to use command line interface instead of function calling
 - Edit database script so it drops selections with negative start times
-- Calculate stats about annotations: 
-  - monthly distribution 
-  - how many are from each region 
-  - calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
 - Create manual databases: 
   - Tries to balance site information (generalization)
   - Tries to balance time of year information (mimic reality?)
@@ -22,13 +19,13 @@
 - Run detector with different spectrogram configs  
 
 ### Long Term To Do's ###
+- Calculate stats about annotations: 
+  - monthly distribution 
+  - how many are from each region 
+  - calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
 - Do pyTables tutorial
   - https://www.pytables.org/usersguide/tutorials.html
 - Understand Nyquist frequency and why the max plot is half the sampling rate
-- Create a read the docs for all of my notes:
-  - https://docs.readthedocs.io/en/stable/tutorial/
-  - https://readthedocs.org/dashboard/
-  - Logged in with github account
 - Look at Farid's SNR work
 - Look at new architecture with Sebastien  
 - Try YOLO using PyTorch
@@ -43,15 +40,22 @@ ______________________
 - Create script that calcs FP, TP, FN, TN
 - Run scripts for multiple spectro test 
 - Create yml file for ketos 2.7 and back up
+- Create a read the docs for all of my notes:
+  - https://docs.readthedocs.io/en/stable/tutorial/
+  - https://readthedocs.org/dashboard/
+  - Logged in with github account
+
 ______________________
 
-## Project Notes ##
+## Code Repository
 
-- Motivation: 
-  - Seasonal patterns
-  - Spatial patterns
-  - AIS/boat
-  - Measuring underwater noise, vulnerability stress to UW noise
+- One general suggestion: 
+  - move code into same program, add a command line interface into 
+  - argparse python package for this 
+  - instead of calling create database
+    - move functions into this scripts
+  - instead of calling other scripts, put everything in one and use command line interface
+  - do not duplicate code
 
 ______________________
 
@@ -74,6 +78,7 @@ ______________________
         - Another thing that would help would be to filter out any selections that don't fit the file before you create the database.
         - Looking at your error message again, it looks like some selections fall outside the boundaries of the file. For example, there's one that starts at 300s and ends at 302s, but maybe that file is only 300s long? If all your files are the same length, it is really easy: you can just drop any selections with a start time smaller than 0 and and end time greater than the file duration. But if the files have different durations, you might want to be more specific and check that the selections are within the file on a file by file basis 11:12 we should add an option to do that when creating the selection tables 
     - Augmentation techniques currently: making multiple spectrograms from one original one by snapping it in different locations in the frame  
+- Test on entire dataset, not a subsample, for spectrogram parameter testing
 ______________________
 
 ## Architecture ##
@@ -108,6 +113,26 @@ ______________________
 ## Data ##
 
 - Fabio was saying that I should make manual datasets where the training and validation sets don't have the same sites or times so it's not biased to understanding the temporal information
+- Creating manual dataset:
+  - You can create separate tables in the database like this:
+  - train 
+    - pos
+      - ulu 
+      - kk
+    - neg
+      - ulu
+      - kk
+  - and the same for test and validation
+- There is a benefit to doing it this way, because then you can use the batch generator to determine the split of data from different sites 
+    - Create a table for site, then a batch generator for that table
+    - Use the Joint Batch Generator to join them together 
+
+- To check all the generated segments to ensure they are correct: 
+  - Fabio says this will be the best thing I can do to improve performance, rather than hyperparameter tuning
+  - Create selection tables 
+  - Save png of each spectrogram in selection table and manually analyze
+  - Edit selection tables accordingly 
+  - The tables getting entered into the database need to be in the ketos format
 
 ______________________
 

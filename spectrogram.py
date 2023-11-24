@@ -6,10 +6,10 @@ This script contains spectrogram investigation functions:
 from spectrogram_utils import load_audio_seg, plot_spectrogram
 
 ### Plot Spectrograms ###
-annot_file = r'C:\Users\kzammit\Documents\Detector\20230913\inputs\all_annotations_20230913-BOnly.xlsx'
+annot_file = r'C:\Users\kzammit\Documents\Detector\manual_dataset\formatted_annots\CB_negatives.xlsx'
 data_dir = r"D:\ringed-seal-data"
-output_dir = r'D:\spectrograms'
-spec_file = r'C:\Users\kzammit\Documents\Detector\20230913\inputs\spec_config_for_plotting.json'
+output_dir = r'C:\Users\kzammit\Documents\Detector\manual_dataset\negatives\CB'
+spec_file = r'C:\Users\kzammit\Documents\Detector\manual_dataset\negatives\spec_config_2sec.json'
 
 # create an audioloader with the spectrograms
 # note you need to define step, maximum overlap, and length in this step

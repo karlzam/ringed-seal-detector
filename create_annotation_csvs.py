@@ -17,7 +17,7 @@ def concat_annot(sel_tables_folder):
 
         df = pd.read_csv(file, sep='\t', encoding='latin1')
         df = df.rename(columns={'KZ Keep? (Y/X/M)': "keep_drop"})
-        df = df[df.keep_drop == 'Y']
+        #df = df[df.keep_drop == 'Y']
 
         if 'CB' in file:
             site_name = file.split('\\')[-1].split('_')[0]
@@ -124,10 +124,10 @@ def split_files(df, output_folder):
 
 if __name__ == "__main__":
 
-    output_dir = r'C:\Users\kzammit\Documents\Detector\annotation_stats'
+    output_dir = r'C:\Users\kzammit\Documents\Detector\manual_dataset'
 
     # path to folder with selection tables
-    sel_table_path = r'C:\Users\kzammit\Documents\Detector\annotation_stats\selection_tables'
+    sel_table_path = r'C:\Users\kzammit\Repos\ringed-seal-meridian-ketos27\_lockbox\annotations\working-annotations'
 
     # name of output selection tables excel workbook (just for reference)
     output_file_trim = output_dir + r'\all_annotations.xlsx'
@@ -137,7 +137,15 @@ if __name__ == "__main__":
     all_annot_orig = concat_annot(sel_table_path)
 
     # output an Excel sheet with all the annotations before splitting
-    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20230913.xlsx')
+    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20231123.xlsx')
 
     # split files into train and val csvs
-    split_files(formatted_table, output_folder=output_dir)
+    #split_files(formatted_table, output_folder=output_dir)
+
+    #output_dir = r'C:\Users\kzammit\Documents\Detector\manual_dataset\formatted_annots'
+
+    #df = pd.read_excel(r'C:\Users\kzammit\Documents\Detector\manual_dataset\ULU2022_all_annots.xlsx')
+
+    #format_annot(df, output_name=output_dir + r'\ULU2022_all_formatted.xlsx')
+
+

@@ -85,6 +85,8 @@ def plot_spectrogram(annot, loader, output_dir):
         fig.show()
         plt.close(fig)
 
+    print('test')
+
 
     """
     spec = next(loader)

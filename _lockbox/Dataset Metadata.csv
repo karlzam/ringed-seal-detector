@@ -1,0 +1,20 @@
+Dataset,Lat,Long,Site,SoundTrap,Serial #,Recorder Make,Recorder Model,Duty Cycle (min on/min off),Sample Rate (kHz),Gain,Time Zone,Water Depth (m),Unit Depth (m),Days Deployed
+Cape_Bathurst_50_2018_2019,70.57578167,-127.6605317,,,,Ocean Instruments,ST500,5 min/55 min,48,18 dB,UTC,49,43.5,355
+Cape_Bathurst_300_2018_2019,70.68122,-126.8716283,,,,Ocean Instruments,ST500,5 min/55 min,48,NA,UTC,295,289.5,362
+Kitikmeot_2017_2018,69.02168333,-105.7376,,,,Wildlife Acoustics,SM3M,2 min/10 min,96,0,UTC,93,85,348
+Kitikmeot_2018_2019,69.00491667,-105.7376333,,,,Wildlife Acoustics,SM3M,4:20 min/55:40 min,96,0,UTC,92,84,396
+Pearce_Point_2018_2019,70.20091667,-123.1578333,,,,Ocean Instruments,ST500,5 min/55 min,48,NA,UTC,351,348,361
+Sachs_2015-2016,71.92701667,-125.3907833,,,,Wildlife Acoustics,SM3M,5 min/30 min,48,18 dB,UTC - 6,30,28.5,323
+Ulu_2016-2017 full wav Dataset,70.71428333,-117.8003333,,,,Wildlife Acoustics,SM3M,5 min/25 min,48,12 dB,UTC - 6,30.5,27.5,286
+Ulu_2017_2018,70.71875,-117.7967667,,,,Wildlife Acoustics,SM3M,5 min/25 min,48,12 dB,UTC - 6,24.4,21.4,371
+Ulu_2018_2019,70.71875,-117.7967667,,,,Wildlife Acoustics,SM3M,5 min/55 min,48,12 dB,UTC - 6,24.4,21.4,378
+Ulu_2022,70.57739,-117.38303,2,1,67653638,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,107.9,2,1
+Ulu_2022,70.69228,-117.71027,5,2,67145740,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,63.6,2,1
+Ulu_2022,70.6196,-117.42094,11,3,67371018,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,15.6,2,3
+Ulu_2022,70.6211,-117.48071,12,1,67653638,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,21.5,2,3
+Ulu_2022,70.59658,-117.4446,15,2,67145740,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,57.4,2,2
+Ulu_2022,70.67461,-117.74223,27,2,67145740,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,46.6,2,5
+Ulu_2022,70.62331,-116.42748,66,1,67653638,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,64.2,2,1
+Ulu_2022,70.69498,-117.71614,5,3,67371018,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,63.6,2,2
+Ulu_2022,70.72435,-117.82376,78,1,67653638,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,13.1,2,3
+Ulu_2022,70.74365,-117.868,81,3,67371018,Ocean Instruments,ST300,Continuous,96,High Gain,UTC - 6,17.2,2,3

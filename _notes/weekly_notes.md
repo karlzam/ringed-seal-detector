@@ -1,13 +1,67 @@
 # Weekly Notes #
 
+## Nov-6-10-2023 ##
+
+*Goals for the week:*
+- Pick rule for first manual database 
+- Finish grad workshop presentation
+- Create annotation table for manual database
+- Generate plots of all spectrograms in that db 
+- Edit selection table when errors found 
+
+### Nov-7-2023 ###
+
+Meeting w Fabio: 
+- Look at annotation stats, discuss db
+  - No one obvious way 
+  - Few common things: 
+    - can this model detect ringed seal calls regardless of place/time/etc?
+      - train on everything, test only on ulu 2022 
+    - is it important to work on locations and instruments?
+      - reserve those for testing only 
+      - trained on ulu, test on another location, etc 
+      - works BUT also train on data from this location
+        - take one location, 
+  - Start:
+    - use ulu and kk data, split 
+      - can't show that it works in new places, show on new site, without any changes, see how it does, run and fine tune the model with data from that site
+      - need an extra dataset that you didn't use for train/test, some for fine-tuning and some for testing
+      - leave out pp and use cb for training too 
+      - run detector trained on ulu, cb, kk -> on pp -> fine tuning phase with pp, couple epochs with pretrained model 
+      - when pretrained model, take optimized values instead of random values, freeze some layers, start freezing from end of network, if that doesn't work, start unfreezing the last layers 
+      - unfreeze the last layer, one or two epochs 
+    - ulu and kk, how to split? 
+      - table in db from each site, you can change the proportion of each in each batch
+      - in ketos: create a batch generator for each table, then joint batch generator from those two 
+      - pass the joint one to the model, when you create it you can set the proportions
+      - this gives you a bit more freedom 
+      - in the beginning: try to use the majority of kk data and top up with ulu, and then test with more ulu data
+
+
 ## Oct-30-Nov-3-2023 ##
 
 *Goals for the week:*
 - Create manual database 
-  - Look at Najeem and Bill's email to see how to handle the improperly named filenames 
-  - Create script that will output the number of annotations per month per site 
-  - Create a graphic to help understand this - ie. histogram
+  - Look at Najeem and Bill's email to see how to handle the improperly named filenames (DONE)
+  - Create script that will output the number of annotations per month per site (DONE)
+  - Create a graphic to help understand this - ie. histogram (DONE)
 - Start writing thesis
+
+### Nov-2-2023 ###
+
+- Spoke w Bill about annotations, notes: 
+  - Update script to monthly 
+  - Pick a manual database rule and just go with it 
+- Noticed Sachs Harbour data was missing, go look at the annotations provided by Bill 
+- A table of metadata is appropriate for thesis
+
+Q's For Fabio: 
+- Can I test on a subsample of the data for testing the spectrogram parameters? 
+  - I think previously we said because it trains so quickly to use the whole db, but I see Ruwan used a subsample
+- Manual databases:
+  - Have annotation stats now, what should I do? Very heavily biased towards Ulu 
+- Double-check my code perhaps if we have time? Want to make sure I'm using the right stuff
+  - Will update to ketos run command for the last step
 
 ### Nov-1-2023 ###
 - Wrote script and output plots for annotation stats, both time and site dependent 
