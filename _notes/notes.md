@@ -4,19 +4,12 @@
 ## To do's ##
 
 - Update scripts to use command line interface instead of function calling
-- Edit database script so it drops selections with negative start times
-- Create manual databases: 
-  - Tries to balance site information (generalization)
-  - Tries to balance time of year information (mimic reality?)
-  - Manually verify all spectros created from annotations and figure out how to remove errors
-- Run test that's identical to ones run before just with the new database 
+- Edit database script so it drops selections with negative start times 
 - Understand the model architecture you're currently using
 - Run many tests similar to what Ruwan did: 
   - Spectrogram settings 
   - Hyperparameter tuning
-- Run detector on the manual database 
-  - Create manual database; go through the data and look at good ones, talk to Fabio and Sebastien about this
-- Run detector with different spectrogram configs  
+- Run detector with different spectrogram configs (colour doesn't matter, it's using pixel intensity)
 
 ### Long Term To Do's ###
 - Calculate stats about annotations: 
@@ -44,6 +37,13 @@ ______________________
   - https://docs.readthedocs.io/en/stable/tutorial/
   - https://readthedocs.org/dashboard/
   - Logged in with github account
+- - Create manual databases: 
+  - Tries to balance site information (generalization)
+  - Tries to balance time of year information (mimic reality?)
+  - Manually verify all spectros created from annotations and figure out how to remove errors
+- Run test that's identical to ones run before just with the new database 
+- Run detector on the manual database 
+- Create manual database; go through the data and look at good ones, talk to Fabio and Sebastien about this
 
 ______________________
 

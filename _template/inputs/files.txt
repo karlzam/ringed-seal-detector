@@ -1,4 +1,0 @@
-annotations_train.csv
-annotations_val.csv
-recipe.json
-spec_config.json

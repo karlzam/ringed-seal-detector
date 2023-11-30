@@ -1,4 +1,0 @@
-All generated files: 
-- database.h5
-- detections.csv
-- model.kt

@@ -1,5 +1,42 @@
 # Weekly Notes #
 
+## Nov 27 - Dec 1 2023 ##
+
+- Finished creating manual dataset 
+  - Checked every negative segment and classified which type of noise it was 
+  - Replaced segments containing RS yelps or missed barks 
+- Because I used 2 sec, I can't change this now - I can go smaller but the classifications won't necessarily hold 
+- Need to now edit selection tables to not have start and end times outside of the file 
+- Test different spectrogram parameters 
+- Try writing out resNet on my own and really understanding what's happening 
+- Plotting saliency maps or something? 
+- Update script to use the method Fabio was talking about instead (using joint batch generator)
+- Next steps: 
+  - Look at false detections in depth and write up a summary 
+  - Test other spectrogram parameters (specifically let's try the frequency and rate)
+  - Maybe add in multiclass?
+  - Write out resnet on my own 
+  - Add the jupyter notebook to the read the docs 
+  - Do command line interface set up 
+  - Fix confusion matrix plot (and figure out which one is right! I'm guessing Ruwans) - yes Ruwans is right
+
+Q's for Fabio: 
+
+1. For the selection tables, I'm loading them in already at the specified duration. Will this cause problems? 
+   - It's ok not to use it 
+
+2. Why am I still getting padding comments when I've manually verified all of these selections from plotting? No where near that many had padding visible when I manually inspected them. Is it because of the "rate" in the cfg? Before I created a function "drop out of bounds selections" and dropped selections with times after or before a wav file, but I don't want to do this bc of the manual-ness of the dataset. Also why would this be happening?
+   - Did indeed have positive selections both before and after the true end of the file 
+   - Won't matter too much to drop those examples 
+   - Do this step before creating the database 
+
+3. Is there a better way to load the tables into the database than I'm doing it now? I remember you were talking about train/ulu/pos, train/ulu/neg kinda structure, but I wasn't sure how to do it
+    - There will be greater flexibility in the future if you adjust to this way, so try it out 
+
+4. Next steps? Probably testing spectrogram settings, maybe if I reintroduce sl.select I can do different durations (less than 2s) easily? And add in augmentation?
+   - Test spectrogram settings 
+   - Duration: can go down to 1.5 or 1 but the classifications on noise segments won't hold anymore potentially
+
 ## Nov-6-10-2023 ##
 
 *Goals for the week:*
