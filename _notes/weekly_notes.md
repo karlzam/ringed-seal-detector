@@ -1,5 +1,95 @@
 # Weekly Notes #
 
+## Dec 4 - Dec 8 2023 ##
+
+Overall goals:
+- Set up command line interface
+- Fix confusion matrix plot function
+- Edit scripts to use the method Fabio was talking about with joint batch generators, etc
+- Test shorter spectrogram parameters 
+- PyTables tutorial
+
+Questions to answer: 
+- Array shape?
+- When does the data actually get converted into a spectrogram array? How is the size determined? 
+- What does the model architecture look like exactly? What does the kernel stride etc do exactly? 
+
+HDF5 and pytables:
+- Hierarchical data format 
+- Project data is often complex, these files allow for storage of large amounts of data 
+- Allows to group in folder structure 
+- Can attach metadata
+
+Summary stuff:
+- Using mag spectrogram, hamming window, min freq 100 max freq 1200
+
+Walk through of create database code: 
+- Read in the excel sheets with the annotations 
+- Load in the spectrogram config as a dict with: 
+  - rate, window, step, freq_min, freq_max, window_func, type, duration
+  - Type is "mag spectrogram" which is a ketos audio spectrogram class 
+  - In the "load_audio_representation" ketos function: 
+    - go to "parse_audio_representation"
+    - returns a dict with all da info 
+  - create a database using the "create database" function from ketos database interface class 
+    - start  line 903 in database_interface
+
+Walk through of train classifier code: 
+- open file using pytables in read mode
+  - Lots of steps here, but just opening the file and checking the file path using pytables 
+- Throw extra data into the last batch file if not evenly divided
+- Using FScore loss 
+- batch normalization using tf.keras.layers.BatchNormalization
+- Using dropout rate of 0
+- In resnet.py, looks like we do: 
+  - Conv initial
+  - blocks [2,2,2] ("sequential")
+  - batch normalization 
+  - relu
+  - average pool 
+  - fully connected 
+  - softmax
+
+- Generate batches using the batch generators
+  - These shuffle the data into batches of the defined size and put the rest into the last batch 
+  - You can refresh the data in the batch at the end of epoch or not 
+- Using the "ResNetInterface" class from Ketos 
+  - the generators, log dir, and checkpoint dir are set before calling the train_loop method of the ResNetInterface class 
+  - Currently not doing anything fancy, no early stopping 
+- In the train loop: 
+  - Outputting a checkpoint every 5th epoch, saves model weights 
+  - Currently outputting a csv for the log, not outputting the tensorflow summary 
+  - not using early stopping 
+  - reset the training and validation loss 
+  - for the first batch (which in this example is 16 spectrograms), 
+    - get the training data (both x and y, ie. data and label)
+    - train_X is a {16, 1500, 56, 1} array 
+    - train_Y is a 16,2 array (labels like [1. 0.], [0. 1.])
+    - Go to the next train step using that train_X and train_Y
+    - where it won't let me step into the _train_step function but....
+      - predict the output labels using the model 
+      - calc the loss using the loss function on the labels and predictions 
+      - apply the gradient to the optimizer, where the gradient is: 
+        - tape.gradient(loss, self.model.trainable_variables)
+      - get the mean loss for the step? (line 1213 of nn_interface.py)
+      - the loss function is the F1Score loss from ketos dev_utils losses 
+    - Once it's looped through all batches, continue 
+    - then run on val data using the _val_step function:
+      - same thing as training except no gradient calc and no applying them
+    - Print out the verbose stuff 
+    - lots of stuff for early stopping 
+    - save to the log
+
+Q's for Fabio:
+- Why do we refresh the batch generator on epoch end for training and not validation? 
+  - Resamples at the end of each epoch so different batches in every epoch 
+- Should I try with early stopping? Why is the default false?
+- Stepping through the training loop, I couldn't get into the "_train_step" function to see the gradient and loss being set, how do you do that? 
+- Time shifting samples, back to the ketos selections question: I think I should do this? and I could do the same for negatives if I set the duration to 1sec with a shift of up to 0.5s?
+- How can the model return a "1" for either class? Does this mean overfitting?
+- Am I normalizing the data at all currently? Trying to make the sites similar in any way? I see I might be able to add in a "normalize wav" key, but is there any effort made elsewhere to normalize the data? Does the MagSpectrogram do this by itself? 
+
+
 ## Nov 27 - Dec 1 2023 ##
 
 - Finished creating manual dataset 
