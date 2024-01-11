@@ -19,7 +19,7 @@ def load_audio_seg(annot_file, spec_file, data_dir):
     :return:
     """
 
-    annot = pd.read_excel(annot_file)
+    annot = pd.read_csv(annot_file)
 
     # something up with loading in the spectro file
     f = open(spec_file)
@@ -44,11 +44,12 @@ def load_audio_seg(annot_file, spec_file, data_dir):
             filename = annot['filename'][ii]
 
     # standardize tables
+    annot = annot.ffill()
     annot_std = sl.standardize(table=annot)
     print('table standardized? ' + str(sl.is_standardized(annot_std)))
 
     # define spectrogram generation parameters
-    spec_par = sl.select(annotations=annot_std, length=2.0, step=1, min_overlap=0.8, center=False)
+    spec_par = sl.select(annotations=annot_std, length=1.0, step=1, min_overlap=1, center=False)
 
     # create a generator for iterating over all the selections
     generator = SelectionTableIterator(data_dir=data_dir, selection_table=spec_par)
@@ -75,18 +76,16 @@ def plot_spectrogram(annot, loader, output_dir):
 
     for ii in range(0, int(annot)):
         spec = next(loader)
-        print('plotting annot #' + str(annot))
+        print('plotting annot #' + str(ii))
         spec.plot()
         fig = spec.plot()
         path = output_dir
         figname = path + "\\" + str(ii) + '.png'
         #plt.title(str(spec.label) + ', annot #' + str(ii), y=-0.01)
+        #plt.tight_layout()
         fig.savefig(figname)
-        fig.show()
-        plt.close(fig)
-
-    print('test')
-
+        #fig.show()
+        #plt.close(fig)
 
     """
     spec = next(loader)

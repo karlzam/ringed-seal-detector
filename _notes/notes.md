@@ -4,26 +4,16 @@
 ## To do's ##
 
 - Update scripts to use command line interface instead of function calling
-- Edit database script so it drops selections with negative start times 
-- Understand the model architecture you're currently using
 - Run many tests similar to what Ruwan did: 
   - Spectrogram settings 
   - Hyperparameter tuning
 - Run detector with different spectrogram configs (colour doesn't matter, it's using pixel intensity)
 
 ### Long Term To Do's ###
-- Calculate stats about annotations: 
-  - monthly distribution 
-  - how many are from each region 
-  - calculate statistics on the annotations (length, time of year, location, etc), make some nice figures
 - Do pyTables tutorial
   - https://www.pytables.org/usersguide/tutorials.html
 - Understand Nyquist frequency and why the max plot is half the sampling rate
 - Look at Farid's SNR work
-- Look at new architecture with Sebastien  
-- Try YOLO using PyTorch
-  - Understand how to read hdf5 file for use in PyTorch
-- Try writing ResNet in PyTorch?
 ______________________
 
 ## Completed ##
@@ -44,6 +34,13 @@ ______________________
 - Run test that's identical to ones run before just with the new database 
 - Run detector on the manual database 
 - Create manual database; go through the data and look at good ones, talk to Fabio and Sebastien about this
+- Look at new architecture with Sebastien (done)
+- Try writing ResNet in PyTorch? - (done - not necessary)
+- Calculate stats about annotations: 
+- monthly distribution (done)
+- how many are from each region (done)
+- calculate statistics on the annotations (length, time of year, location, etc), make some nice figures (done)
+
 
 ______________________
 

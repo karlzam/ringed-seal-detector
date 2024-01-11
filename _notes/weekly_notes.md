@@ -1,13 +1,153 @@
 # Weekly Notes #
 
+- Post-processing detector performance: 
+  - centered signals
+    - overlap increases the chance of capturing signal in favourable window
+    - merge consecutive detections, apply filtering etc
+- Fine tuning stuff:
+  - instead of building from recipe, just load it
+    - add a new classification head: take the weights from the pretrained model, create a new classification head and train the model again.
+      - Here is where you pick how much you want to freeze 
+      - leave all of the convolutional layers frozen and just train the new classification head 
+      - you'll be using the same feature extraction
+      - start with that 
+    - and then try going up the network and unfreeze the last block if that's not working 
+    - important things: what data you have 
+      - two scenarios: worked for all sites you trained on, introduce new site, add data in from both if you want to train on original data and pearce point data 
+      - second: fine-tuning for that specific site, use data only from new site, Fabio thinks this is the best bet for getting the detector working in each place
+
+## Dec 11 - 15 ##
+
+Q's for Fabio for next week:
+- Fine tuning the existing detector walkthrough? Read your paper
+- Why do we refresh the batch generator on epoch end for training and not validation? 
+  - Resamples at the end of each epoch so different batches in every epoch 
+- Should I try with early stopping? 
+- Time shifting samples, back to the ketos selections question: I think I should do this? and I could do the same for negatives if I set the duration to 1sec with a shift of up to 0.5s?
+- Normalizing data: I see the batch norm, but I'm currently not normalizing the input data right? Or does the MagSpectrogram do this?
+- Should I try resnet-18?
+
+### Dec 13
+
+Today To Do's:
+- Write up model architecture summary and create graphic (DONE)
+- Email Sebastien about ensemble learning and clarify you're doing it right (DONE)
+- Get optimal spectrogram parameters from Raven for each site, and for test site PP and Ulu2023
+- Read Mariana's paper
+- Call Mummo
+
+Long term to do's: 
+- cli 
+- add noise and blurring to spectrograms 
+- try even shorter durations
+- add dropout layer after the first layer 
+- try with dropout in general in the architecture 
+- add site name back into annot tables 
+- edit output so its by file instead of by spectrogram
+
+### Dec 12
+- Set up ensemble learning, ran on 1sec and pp
+- Brain too tired to write todo's 
+- Try to write up summary of what trying to do for Fabio for meeting
+
 ## Dec 4 - Dec 8 2023 ##
 
+### Dec 8 ###
+
+Today: 
+- Write thank you note to donor awards people 
+- Saliency maps
+  - https://colab.research.google.com/drive/19eB3uwAtCKZgkoWtMzrF0LTJ-htF_KE7#scrollTo=_9FKJVOAC8a7
+  - .kt file is not directly relatable to a keras Model object
+  - Has a ResNetInterface object, and resnet.model returns a ketos ResNetArch object 
+  - This is a subclassed model
+  - Couldn't figure out how to get keras to understand this model format 
+  - Ketos can output ".kt" or ".pb" format, but the .pb does not output the correct metadata to load as a Keras model 
+  - resnet.model is not a h5 format, so can't use keras load model 
+  - https://www.tensorflow.org/tutorials/keras/save_and_load#save_the_entire_model
+  - https://www.tensorflow.org/guide/keras/making_new_layers_and_models_via_subclassing
+- Test 1 sec duration spectrograms
+- Code to close tables:
+  - import tables
+  - tables.file._open_files.close_all()
+
+Long Term: 
+- Understand how mag spectrogram is generated 
+- Set up command line interface
+- Edit scripts to use the method Fabio was talking about with joint batch generators, etc
+- PyTables tutorial 
+- Saliency maps using xplique
+- Deep ensemble learning 
+- Multiple spectrogram representations in training data 
+- Noise: add blurring, gaussian noise, cropping, dropout after first layer, mix-up
+- Try dropout throughout the network 
+- Try pretrained efficient net B0, fine-tuning the last layer 
+- Try to find a big model that's on speech data, that's not overly big (whisper)
+- Semi-supervised, helpful if there's unlabeled data 
+- Train only on unlabelled data (simCLR), contrastive model (loss is difference between two inputs if you add noise and blurring in two siamese networks), read about this 
+- Try adding site number as an array in the last layers (FC -> SITE # -> FC -> AS USUAL)
+
+### Dec 7 ###
+
+Meeting w Bill:
+- Denoising 
+- How are the spectrograms being compared if the background is so different? 
+
+Meeting w Sebastien: 
+- Discuss current model & results 
+- Other models? Other suggestions? 
+- Denoising - no
+- How are the spectrograms being compared if the background is so different? 
+- How do the skip connections do anything for ResNet? 
+- How to determine array size before and after convolution? 
+
+- multiple spectrogram representations for each selection 
+- add gaussian noise to the spectrogram which would help w overfitting for the multiple sites 
+- uncertainty probability calibration:
+  - What you get at the end of the classifier is a "score" between 0 and 1, its not warranted that its the probability.
+  - calibrate data: conformal prediction: mapie package 
+- deep ensembles: train 5 times, make the seed is different everytime, predict using each model for each segmented spectrogram, make the average of each one, and standard deviation
+
+AUGMENTATION:
+- Mix up: keras probably has a package. Adding samples together with a multiplication factor, read about it, seems like a simple thing to try 
+- Noise
+- Blurring
+- Multiple spectrogram representations 
+- Cropping 
+- Add dropout after the first layer 
+
+OTHER MODEL TYPES:
+- Try dropout throughout the network 
+- Try pretrained efficient net B0, fine-tuning the last layer 
+- Try to find a big model that's on speech data, that's not overly big (whisper)
+
+SSL: 
+- Semi-supervised, helpful if there's unlabeled data 
+- Train only on unlabelled data (simCLR), contrastive model, read about this 
+
+METADATA:
+- Might as well try 
+- add in a site number
+- xplique - keras package, saliency map 
+
+### Dec 6 ###
+- Code map (DONE)
+- Write up how the model works with the kernels and stuff (DONE)
+  - See if I can understand the sizes of the input data in the future
+- Try 1 second spectros w augmentation
+- Update readme file 
+- Set up command line interface 
+- Edit scripts to use the method Fabio was talking about with joint batch generators, etc
+- PyTables tutorial
+- Look at how mag spectrogram is calculated
+
+### Dec 4,5 ###
 Overall goals:
 - Set up command line interface
-- Fix confusion matrix plot function
-- Edit scripts to use the method Fabio was talking about with joint batch generators, etc
+- Fix confusion matrix plot function (DONE)
+- Edit scripts to use the method Fabio was talking about with joint batch generators, etc 
 - Test shorter spectrogram parameters 
-- PyTables tutorial
+- PyTables tutorial 
 
 Questions to answer: 
 - Array shape?
@@ -79,15 +219,6 @@ Walk through of train classifier code:
     - Print out the verbose stuff 
     - lots of stuff for early stopping 
     - save to the log
-
-Q's for Fabio:
-- Why do we refresh the batch generator on epoch end for training and not validation? 
-  - Resamples at the end of each epoch so different batches in every epoch 
-- Should I try with early stopping? Why is the default false?
-- Stepping through the training loop, I couldn't get into the "_train_step" function to see the gradient and loss being set, how do you do that? 
-- Time shifting samples, back to the ketos selections question: I think I should do this? and I could do the same for negatives if I set the duration to 1sec with a shift of up to 0.5s?
-- How can the model return a "1" for either class? Does this mean overfitting?
-- Am I normalizing the data at all currently? Trying to make the sites similar in any way? I see I might be able to add in a "normalize wav" key, but is there any effort made elsewhere to normalize the data? Does the MagSpectrogram do this by itself? 
 
 
 ## Nov 27 - Dec 1 2023 ##

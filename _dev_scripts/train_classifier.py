@@ -7,7 +7,7 @@ from ketos.neural_networks.resnet import ResNetInterface
 main_folder = r'C:\Users\kzammit\Documents\Detector\manual_detector_2sec'
 db_name = main_folder + '\\' r'manual_database_2sec.h5'
 recipe = main_folder + '\\' + r'inputs\resnet_recipe.json'
-output_name = main_folder + '\\' + 'rs-2sec-test.kt'
+output_name = main_folder + '\\' + 'rs-2sec.kt'
 spec_file = main_folder + '\\' + r'inputs\spec_config_2sec.json'
 
 
@@ -18,7 +18,7 @@ tf.random.set_seed(2000)
 
 # Set the batch size and number of epochs for training
 batch_size = 16
-n_epochs = 5
+n_epochs = 40
 log_folder = main_folder + '\\' + 'logs'
 checkpoint_folder = main_folder + '\\' + 'checkpoints'
 
