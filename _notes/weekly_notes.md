@@ -1,5 +1,198 @@
 # Weekly Notes #
 
+## Mar 11-15
+
+- The Adam optimizer has a sort of learning rate scheduler built into it, so it's not a huge deal to not 
+- adjust the learning rate for fine tuning, and it's not trivial in the ketos package
+- query in python: https://www.pytables.org/usersguide/condition_syntax.html
+- Learn SQLite to get a bit of experience: https://en.wikipedia.org/wiki/SQLite
+
+- For citing ketos: 
+  - as a website documentation 
+  - can describe model framework without ketos 
+  - say i used this package to do this
+  - for the tonal noise reduction, say i used this function
+  - include code with publication then don't have to explain as much
+
+
+Script to get hdf5 data: 
+
+    file = r'E:\baseline-with-normalization-reduce-tonal\final-baseline-db-normalized-rtn.h5'
+    
+    h5file = open_file(file, mode="r")
+    
+    table = h5file.get_node('/test/data')
+    
+    # by row index
+    # table[0]['label']
+    # table[0][['label, data']
+    
+    # to find the id
+    # loop through all the rows, add a condition, if this row id is in my list, do something to data
+    # save this data to a file as you go
+    
+    ids = [1, 2, 3, 4]
+    rows = []
+    for row in table:
+        if row['id'] in ids:
+            rows.append(row['data'])
+            # create a function that plots the data, remove the append
+            if row['id'] == ids[-1]:
+                break
+
+
+## Feb 19 - 23
+
+### To Do's: 
+- Try adding noise 
+- Try the enhance signal stuff and reduce tonal noise 
+- Fine-tuning the best baseline model 
+
+Questions for Fabio: 
+- Adding noise made everything worse, have you seen this before?
+- Going over Farid's SNR calculations, why does he do a left and right calculation? 
+- Would I be able to try your thesis method with the different representation for spectrograms?
+
+## Feb 12 - 16 
+
+### To Do's:
+- Finish normalization stuff 
+- Add noise to spectrograms and apply to baseline and one with normalization 
+
+### Notes & Q's:
+- Should I be normalizing the wav form or the spectrogram?
+- In ketos, how to do this specifically? 
+
+Sebastien says for each epoch to add a different type of noise to the spectrograms. 
+
+Adding noise into the database directly: 
+- database_interface.py: 
+  - line 940, x = next(loader), x.data.data returns the array 
+  - line 1194 also accesses the raw data array to write to the file 
+  - would need to understand how these two different write functions interact 
+
+## Feb 5 - 9 ##
+
+### To Do's:
+- Start writing for two hours a day 
+- Do saliency maps 
+- Look at normalizing the data 
+- Finish fine-tuning stuff and figure out how to unfreeze blocks 
+
+Looking at normalization:
+- the baseAudio transforms are: self.allowed_transforms = {'normalize': self.normalize, 
+                                   'adjust_range': self.adjust_range}
+- for a magnitude spectrogram, this is updated to also include: self.allowed_transforms.update({'blur': self.blur, 
+                                        'enhance_signal': self.enhance_signal,
+                                        'reduce_tonal_noise': self.reduce_tonal_noise,
+                                        'resize': self.resize})
+
+-Default normalize statement: Normalize the waveform to have a mean of zero (mean=0) and a standard deviation of unity (std=1) before computing the spectrogram. Default is False.
+
+## Jan 29 - Feb 2 ##
+
+### To Do's: 
+- Send Elise & Bill data 
+- Figure out how to load model 
+- Figure out how to access last layer to do a t-sne plot 
+- Do saliency maps and t-sne
+
+Q's for Fabio: 
+- Confirm fine-tuning was done correctly? 
+- How to load model? 
+  - Specifically, for saliency plots and t-sne of fully connected layer representation
+    - t-sne: it'll be an array with 2 entries right, one for each class? and then the softmax layer takes it and converts it into the confidence score? 
+- Noticed the raw output vs the not raw output looks to be swapped after going through the "transform function"? Why? 
+- I understand it's a subclassed model from keras, but when I try to use the functions listed online, you need a 
+"model.input", which doesn't look to be defined, and if I try to get the output from an intermediate layer, it says it's not connected and so there's no output
+- I understand you need to call the model on an instance before you can get the weights, which I've accessed 
+- How to load checkpoint files?
+
+Meeting w Fabio: 
+Fine Tuning
+
+- Replace top: keeps feature extraction layers, replaces the classification head
+- Freeze & unfreeze blocks: gives more control
+- Run it longer, try a different learning rate potentially if you need to
+- LR: test if showed some problems, if loss was oscillating a lot the learning rate might be too large, leave this as the last thing to do bc it is working
+- Fabio would do: test the model, measure the performance compared to the original before you try other things, repeat that measurement for each thing you try
+- Try to unfreeze some feature extraction blocks starting from the last one, which is the closest to the classification layer that you replaced
+- If you need to unfreeze more layers, the feature extraction layers might not be optimal for the new dataset, the deeper you go, the more drastic the difference will be - could also take the model and retrain it entirely from the loaded model
+- The less you freeze, the more the optimizer has freedom, you might end up with a model that is different than the original - this probably wouldn’t be a problem in my case
+- Might get to a point where the performance isn't so different than the original dataset - performance improvement might plateau and see how far you can go
+- You can go a bit more specific and unfreeze specific layers within a block, but that probably won't make a difference, try the others first
+- "unfreeze block 6", you can look at the code and see the individual unfrozen layers in there, up to block level there are methods
+ 
+
+Accessing Intermediate Layers
+
+- T-sne: rough idea of where things are, there is a problem with this kind of analysis, the dimensionality reduction, trying to visualize HD into two or three, mapped projections, you always lose something, all of these have the same principal where you need the feature map to generate the plots
+- Model.model.layers
+- Resnet ketos arch obj -> model is the tensorflow loaded model -> has attributes
+- Layers is nested: layers.layers[1].layers, etc
+- Could create a new tensorflow model and create a list of new layers, taking layers from trained model
+- My_layers = model.model.
+- "get feature extractor" method sort of already gets a list of layers
+- Right before the fully connected layer, take that to features
+- Tf.keras.models.Sequential(pre_trained_model.model.layers[0:4])
+- Feature_extractor.trainable = false
+- This is an instance of the sequential class, this will be a tensorflow model
+- You'll get 32x128 (batch size, last conv layer)
+- To call it with an input:
+- Feature_extractor(inputs) where the input is the spectrogram, the same thing you pass to the entire model
+ 
+
+Saliency maps:
+
+- Pass input through model, get the value of the outputs at that layer, before you go to the next layer, you take that and reshape that into a 2D array and plot as a heat map, each of those values you have will map to a time-frequency bin
+- Basic idea: plot which neurons are activated when you pass through a certain layer, each element of the activation can be mapped into the input
+- Start with 256x256, map 16x16, if that is activated, it means that the values that are in the corresponding area are making that activate, that’s an indication that info was important
+- Parallel: where was the model looking in this image to call it a dog or a cat
+- "what makes that layer activate, and how do you measure it?" - the weight of the parameters, each of the 32x32 pixels of the output of the convolutional layer, has a weight and a bias to it, you can look at the values
+- You need to plot the weights and also the values of the output
+- Often doesn't look great because you get really sharp changes, often people use lots of image processing techniques to use kernel smoother to make a transition look nicer
+- Write a function, takes a trained model in, specify which layer you want to look at, assemble up to that layer, call layer on inputs you provide, gives output of [batch size, dimensions], project that back to the original dimensions to see what part overlaps with the original image, plot with the same axis as the input
+
+KZ Notes from script: 
+# fully connected layer weights
+    # model.model.layers[4].get_weights()
+
+    # internet says you can get the output of the layers by doing:
+    # inp = model.model.input
+    # outputs = [layer.output for layer in model.layers]
+    # BUT, I get "Layer res_net_arch_1 is not connected, no input to return."
+
+    # this returns the output of the softmax layer - just want to load one before that
+    #model.run_on_batch(batch_data['data'], return_raw_output=True)
+
+    # could be useful: https://github.com/philipperemy/keract
+
+    # to run on one thing:
+    #output2 = model.run_on_instance(batch_data['data'][0], return_raw_output=False)
+    # returns 0: [0], 1: [0.8529221]
+
+    #output2 = model.run_on_instance(batch_data['data'][0], return_raw_output=True)
+    # returns array, [[0.8529221 0.14707792]]
+
+    #... interesting why are these flipped?
+
+    # So we've used the "subclassed Model" keras type, not the functional API
+
+
+
+## Jan 15 - 19 ##
+
+To Do's: 
+- Manually check the remaining negatives for the not centered results 
+- Rerun with balanced samples 
+- Run with multiple different seeds and fix the ensemble script
+- Test different spectrogram parameters
+- Talk to Fabio about post processing steps 
+- Show results for randomly generated noise samples 
+- Try fine-tuning for PP with the best generated result
+
+## Last Week of Dec ##
+
 - Post-processing detector performance: 
   - centered signals
     - overlap increases the chance of capturing signal in favourable window

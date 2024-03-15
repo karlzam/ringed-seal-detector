@@ -25,8 +25,6 @@ def concat_annot(sel_tables_folder):
             site_name = file.split('\\')[-1].split('_')[0] + '.' + file.split('\\')[-1].split('_')[1]
         elif 'ulu.2022' in file:
             site_name = 'ulu.2022'
-        elif 'ulu.2023' in file:
-            site_name = file.split('\\')[-1].split('_')[0]
         else:
             site_name = file.split('\\')[-1].split('_')[0] + '.' + file.split('\\')[-1].split('_')[1] + '.' + \
                         file.split('\\')[-1].split('_')[2]
@@ -89,7 +87,7 @@ def format_annot(df, output_name):
         # append this wav files info to the df_annot df
         df_annot = pd.concat([df_annot, df_temp], ignore_index=True)
 
-    df_annot = df_annot.rename(columns={'Call Type': "call_type"})
+    df_annot = df_annot.rename(columns={'Call Type (KZ)': "call_type"})
 
     df_annot_sub = df_annot[['site_name', 'Selection', 'filename', 'start', 'end', 'annot_id']]
 
@@ -126,10 +124,10 @@ def split_files(df, output_folder):
 
 if __name__ == "__main__":
 
-    output_dir = r'D:\ringed_seal_selection_tables\ulu2023'
+    output_dir = r'F:\sels'
 
     # path to folder with selection tables
-    sel_table_path = r'D:\ringed_seal_selection_tables\ulu2023'
+    sel_table_path = r'F:\sels'
 
     # name of output selection tables excel workbook (just for reference)
     output_file_trim = output_dir + r'\all_annotations.xlsx'
