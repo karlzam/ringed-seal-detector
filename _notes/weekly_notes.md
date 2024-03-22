@@ -1,5 +1,13 @@
 # Weekly Notes #
 
+## Mar 18-22
+
+### To Do's: 
+- Fully annotate a subset of the Ulu2023 data
+- Fully annotate a subset of the Pearce Point data
+- Write a script to compare the output detections at each threshold to the full annotations for 
+those audio files 
+
 ## Mar 11-15
 
 - The Adam optimizer has a sort of learning rate scheduler built into it, so it's not a huge deal to not 

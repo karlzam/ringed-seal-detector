@@ -2,7 +2,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 
-folder = r'E:\baseline-with-normalization-reduce-tonal\metrics\stats'
+folder = r'E:\baseline-with-normalization-reduce-tonal\all-models\metrics\stats'
 
 files = glob.glob(folder + '\*.csv')
 
@@ -52,7 +52,7 @@ plt.plot(f1['threshold'], f1['mean'], '#999999', label='F1')
 plt.fill_between(f1['threshold'], f1['mean-std'], f1['mean+std'], color='#999999', alpha=0.2)
 
 plt.legend()
-plt.title('Average Metrics Across 10 Model Runs with Shaded Standard Deviation')
+#plt.title('Average Metrics Across 10 Model Runs with Shaded Standard Deviation')
 plt.xlabel('Threshold')
 plt.ylabel('Value')
 plt.savefig(folder + '\\' + 'average_metrics.png')

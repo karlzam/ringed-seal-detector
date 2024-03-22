@@ -84,7 +84,7 @@ plt.plot(accuracy_val['epoch'], accuracy_val['mean'], '#ff7f00', label='Val')
 plt.fill_between(accuracy_val['epoch'], accuracy_val['mean'] - accuracy_val['std'],
                  accuracy_val['mean'] + accuracy_val['std'], color='#ff7f00', alpha=0.2)
 
-plt.title("Average Accuracy Curve with Shaded Standard Deviation")
+#plt.title("Average Accuracy Curve with Shaded Standard Deviation")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.legend()
@@ -100,7 +100,7 @@ plt.plot(loss_val['epoch'], loss_val['mean'], '#ff7f00', label='Val')
 plt.fill_between(loss_val['epoch'], loss_val['mean'] - loss_val['std'],
                  loss_val['mean'] + loss_val['std'], color='#ff7f00', alpha=0.2)
 
-plt.title("Average Loss Curve with Shaded Standard Deviation")
+#plt.title("Average Loss Curve with Shaded Standard Deviation")
 plt.xlabel("Epoch")
 plt.ylabel("loss")
 plt.legend()
@@ -116,7 +116,7 @@ plt.plot(recall_val['epoch'], recall_val['mean'], '#ff7f00', label='Val')
 plt.fill_between(recall_val['epoch'], recall_val['mean'] - recall_val['std'],
                  recall_val['mean'] + recall_val['std'], color='#ff7f00', alpha=0.2)
 
-plt.title("Average Recall Curve with Shaded Standard Deviation")
+#plt.title("Average Recall Curve with Shaded Standard Deviation")
 plt.xlabel("Epoch")
 plt.ylabel("recall")
 plt.legend()
@@ -132,7 +132,7 @@ plt.plot(precision_val['epoch'], precision_val['mean'], '#ff7f00', label='Val')
 plt.fill_between(precision_val['epoch'], precision_val['mean'] - precision_val['std'],
                  precision_val['mean'] + precision_val['std'], color='#ff7f00', alpha=0.2)
 
-plt.title("Average Precision Curve with Shaded Standard Deviation")
+#plt.title("Average Precision Curve with Shaded Standard Deviation")
 plt.xlabel("Epoch")
 plt.ylabel("precision")
 plt.legend()

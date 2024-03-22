@@ -69,40 +69,46 @@ def plot_spectrogram(annot, loader, output_dir):
 
     fig, axs = plt.subplots(2, 2, sharey=True, figsize=(12,9), gridspec_kw={'height_ratios': [1, 1]})
 
-    spec = loader.load(data_dir, loader.selection_gen.get_selection(2)['filename'],
-                       loader.selection_gen.get_selection(2)['offset'],
-                       loader.selection_gen.get_selection(2)['duration'])
+    #spec = loader.load(data_dir, loader.selection_gen.get_selection(2)['filename'],
+    spec=loader.load(data_dir, loader.selection_gen.get_selection(0)['filename'],
+                       loader.selection_gen.get_selection(0)['offset'],
+                       loader.selection_gen.get_selection(0)['duration'])
     x = spec.get_data()
     extent = (0., spec.duration(), spec.freq_min(), spec.freq_max())  # axes ranges
-    img = axs[0, 0].imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None)  # draw image
+    img = axs[0, 0].imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None)
     axs[0, 0].set_ylabel(spec.freq_ax.label)
+    axs[0, 0].title.set_text('Background')
 
     if spec.decibel:
         fig.colorbar(img, ax=axs[0, 0], format='%+2.0f dB')
     else:
         fig.colorbar(img, ax=axs[0, 0], label='Amplitude')
 
-    spec = loader.load(data_dir, loader.selection_gen.get_selection(4)['filename'],
-                       loader.selection_gen.get_selection(4)['offset'],
-                       loader.selection_gen.get_selection(4)['duration'])
+    #spec = loader.load(data_dir, loader.selection_gen.get_selection(4)['filename'],
+    spec=loader.load(data_dir, loader.selection_gen.get_selection(1)['filename'],
+                       loader.selection_gen.get_selection(1)['offset'],
+                       loader.selection_gen.get_selection(1)['duration'])
     x = spec.get_data()
     extent = (0., spec.duration(), spec.freq_min(), spec.freq_max())  # axes ranges
     img = axs[0, 1].imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None)  # draw image
     #axs[0, 1].set_ylabel(spec.freq_ax.label)
+    axs[0, 1].title.set_text('Other Unidentified')
 
     if spec.decibel:
         fig.colorbar(img, ax=axs[0, 1], format='%+2.0f dB')
     else:
         fig.colorbar(img, ax=axs[0, 1], label='Amplitude')
 
-    spec = loader.load(data_dir, loader.selection_gen.get_selection(27)['filename'],
-                       loader.selection_gen.get_selection(27)['offset'],
-                       loader.selection_gen.get_selection(27)['duration'])
+    #spec = loader.load(data_dir, loader.selection_gen.get_selection(27)['filename'],
+    spec=loader.load(data_dir, loader.selection_gen.get_selection(2)['filename'],
+                       loader.selection_gen.get_selection(2)['offset'],
+                       loader.selection_gen.get_selection(2)['duration'])
     x = spec.get_data()
     extent = (0., spec.duration(), spec.freq_min(), spec.freq_max())  # axes ranges
     img = axs[1, 0].imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None)  # draw image
     axs[1, 0].set_ylabel(spec.freq_ax.label)
     axs[1, 0].set_xlabel('Time (s)')
+    axs[1, 0].title.set_text('Bearded Seal')
 
     if spec.decibel:
         fig.colorbar(img, ax=axs[1, 0], format='%+2.0f dB')
@@ -111,31 +117,33 @@ def plot_spectrogram(annot, loader, output_dir):
 
     # ulu 56
     # cb 147
-    spec = loader.load(data_dir, loader.selection_gen.get_selection(182)['filename'],
-                       loader.selection_gen.get_selection(182)['offset'],
-                       loader.selection_gen.get_selection(182)['duration'])
+    #spec = loader.load(data_dir, loader.selection_gen.get_selection(182)['filename'],
+    spec=loader.load(data_dir, loader.selection_gen.get_selection(3)['filename'],
+                       loader.selection_gen.get_selection(3)['offset'],
+                       loader.selection_gen.get_selection(3)['duration'])
     x = spec.get_data()
     extent = (0., spec.duration(), spec.freq_min(), spec.freq_max())  # axes ranges
     img = axs[1, 1].imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None)  # draw image
     #axs[1, 1].set_ylabel(spec.freq_ax.label)
     axs[1, 1].set_xlabel('Time (s)')
+    axs[1, 1].title.set_text('Non-Biological')
 
     if spec.decibel:
         fig.colorbar(img, ax=axs[1, 1], format='%+2.0f dB')
     else:
         fig.colorbar(img, ax=axs[1, 1], label='Amplitude')
 
-    fig.suptitle('Negative Spectrograms with Normalization')
+    #fig.suptitle('Positive Spectrograms with Normalization')
     #plt.show()
-    fig.savefig(r'E:\spectrograms\negatives' + '\\' + 'negative-spectrograms.png')
+    fig.savefig(output_dir + '\\' + 'negative-spectrograms.png')
 
 
 if __name__ == "__main__":
 
-    annot_file = r'E:\final-baseline-detector\annots\neg\CB-negs-joined.xlsx'
+    annot_file = r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples\neg-examples-sels.xlsx'
     data_dir = r"D:\ringed-seal-data"
-    output_dir = r'E:\spectrograms\negatives'
-    spec_file = r'E:\baseline-w-normalization\spec_config_100-1200Hz-0.032-hamm-normalized0.json'
+    output_dir = r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples'
+    spec_file = r'E:\baseline-with-normalization-reduce-tonal\spec_config_100-1200Hz-0.032-hamm-normalized-reduce-tonal.json'
 
     # create an audioloader with the spectrograms
     annot, loader = load_audio_seg(annot_file, spec_file, data_dir)

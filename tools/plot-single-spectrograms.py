@@ -19,7 +19,7 @@ def load_audio_seg(annot_file, spec_file, data_dir):
     :return:
     """
 
-    annot = pd.read_csv(annot_file)
+    annot = pd.read_excel(annot_file)
 
     # something up with loading in the spectro file
     f = open(spec_file)
@@ -60,27 +60,20 @@ def plot_spectrogram(annot, loader, output_dir):
         path = output_dir
         figname = path + "\\" + str(ii) + '.png'
         fig.savefig(figname, bbox_inches='tight')
+        plt.close()
 
 
 if __name__ == "__main__":
 
-    annot_folder_pos = r'E:\final-baseline-detector\annots\pos'
-    annot_folder_neg = r'E:\final-baseline-detector\annots\neg'
+    annot_folder = r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples'
     data_dir = r"D:\ringed-seal-data"
-    spec_file = r'E:\baseline-w-normalization\spec_config_100-1200Hz-0.032-hamm-normalized0.json'
+    spec_file = r'E:\baseline-with-normalization-reduce-tonal\spec_config_100-1200Hz-0.032-hamm-normalized-reduce-tonal.json'
 
-    annot_folders = [annot_folder_pos, annot_folder_pos, annot_folder_pos, annot_folder_pos, annot_folder_pos,
-                     annot_folder_neg, annot_folder_neg, annot_folder_neg, annot_folder_neg, annot_folder_neg]
+    annot_folders = [annot_folder]
 
-    annot_files = ['CB_all_formatted_1sec.csv', 'KK_all_formatted_1sec.csv', 'PP_all_formatted_1sec.csv',
-                       'ULU_all_formatted_1sec.csv', 'ULU2022_all_formatted_1sec.csv', 'CB-negs-joined.csv',
-                       'KK-negs-joined.csv', 'PP-negs-joined.csv', 'ULU-negs-joined.csv', 'ULU2022-negs-joined.csv']
+    annot_files = ['neg-examples-sels.xlsx']
 
-
-    output_dirs = [r'E:\spectrograms\all\pos\CB', r'E:\spectrograms\all\pos\KK', r'E:\spectrograms\all\pos\PP',
-                   r'E:\spectrograms\all\pos\ULU', r'E:\spectrograms\all\pos\ULU2022', r'E:\spectrograms\all\neg\CB',
-                   r'E:\spectrograms\all\neg\KK', r'E:\spectrograms\all\neg\PP', r'E:\spectrograms\all\neg\ULU',
-                   r'E:\spectrograms\all\neg\ULU2022']
+    output_dirs = [r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples']
 
     for idx, folder in enumerate(annot_folders):
 
