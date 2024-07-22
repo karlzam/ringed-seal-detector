@@ -3,6 +3,7 @@ import seaborn as sns
 pd.options.mode.chained_assignment = None
 import sys
 import matplotlib.pyplot as plt
+import matplotlib
 from ketos.data_handling import selection_table as sl
 from ketos.audio.spectrogram import MagSpectrogram
 from ketos.audio.audio_loader import AudioLoader, SelectionTableIterator
@@ -27,14 +28,14 @@ def load_audio_seg(annot_file, spec_file, data_dir):
     rep = spec_info['spectrogram']
 
     # deal with merging of cells in the annotations table
-    for ii in range(0, len(annot)):
-        if type(annot.loc[ii][0]) == str:
-            filename = annot.loc[ii][0]
-        else:
-            filename = annot['filename'][ii]
+    #for ii in range(0, len(annot)):
+    #    if type(annot.loc[ii][0]) == str:
+    #        filename = annot.loc[ii][0]
+    #    else:
+    #        filename = annot['filename'][ii]
 
     # standardize tables
-    annot = annot.ffill()
+    #annot = annot.ffill()
     annot_std = sl.standardize(table=annot)
     print('table standardized? ' + str(sl.is_standardized(annot_std)))
 
@@ -53,27 +54,38 @@ def load_audio_seg(annot_file, spec_file, data_dir):
 
 def plot_spectrogram(annot, loader, output_dir):
 
+    font = {'family': 'sans',
+            'weight': 'normal',
+            'size': 20}
+    matplotlib.rc('font', **font)
+
     for ii in range(0, int(annot)):
         spec = next(loader)
-        print('plotting annot #' + str(ii))
-        fig = spec.plot(label_in_title=False)
+        x = spec.get_data()
+        extent = (0., spec.duration(), spec.freq_min(), spec.freq_max())  # axes ranges
+        plt.imshow(x.T, aspect='auto', origin='lower', extent=extent, vmin=None, vmax=None, cmap='Greys')
+        #fig = spec.plot(label_in_title=False)
         path = output_dir
-        figname = path + "\\" + str(ii) + '.png'
-        fig.savefig(figname, bbox_inches='tight')
+        figname = path + "\\" + str(ii) + '-' + str(loader.selection_gen.sel.Title[ii]) + '.png'
+        #plt.title(loader.selection_gen.sel.Title[ii])
+        plt.savefig(figname, bbox_inches='tight')
         plt.close()
 
 
 if __name__ == "__main__":
 
-    annot_folder = r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples'
+    annot_folder = r'E:\baseline-with-normalization-reduce-tonal\fine-tuning\CierrasFiles\formatted\pp_plot'
+    #annot_folder = r'E:\baseline-with-normalization-reduce-tonal\ulu2023\detections\ensemble\plotting'
     data_dir = r"D:\ringed-seal-data"
-    spec_file = r'E:\baseline-with-normalization-reduce-tonal\spec_config_100-1200Hz-0.032-hamm-normalized-reduce-tonal.json'
+    spec_file = r'E:\baseline-with-normalization-reduce-tonal\fine-tuning\spec_config_100-1200Hz-0.032-hamm-normalized.json'
 
-    annot_folders = [annot_folder]
+    annot_folders = [annot_folder, annot_folder]
 
-    annot_files = ['neg-examples-sels.xlsx']
+    annot_files = ['new_negatives_pp.xlsx']
+    #annot_files = ['ulu2023-dets-to-plot-formatted.xlsx']
 
-    output_dirs = [r'E:\baseline-with-normalization-reduce-tonal\spectro\negative-examples']
+    output_dirs = [r'E:\baseline-with-normalization-reduce-tonal\fine-tuning\CierrasFiles\formatted\pp_plot']
+    #output_dirs = [r'E:\baseline-with-normalization-reduce-tonal\ulu2023\detections\ensemble\plotting']
 
     for idx, folder in enumerate(annot_folders):
 
