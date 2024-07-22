@@ -1,11 +1,13 @@
 import pandas as pd
 import os
+import tensorflow as tf
 from ketos.data_handling.parsing import load_audio_representation
 from ketos.neural_networks.resnet import ResNetInterface
 from ketos.audio.audio_loader import AudioFrameLoader
 from ketos.neural_networks.dev_utils.detection import batch_load_audio_file_data, filter_by_threshold, filter_by_label, merge_overlapping_detections
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
+tf.get_logger().setLevel('ERROR')
 
 print('done importing packages')
 

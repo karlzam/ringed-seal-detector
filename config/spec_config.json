@@ -1,0 +1,22 @@
+{
+  "spectrogram": {
+    "rate": 3000,
+    "window": 0.032,
+    "step": 0.001,
+    "freq_min": 100,
+    "freq_max": 1200,
+    "transforms": [
+      {
+        "name": "normalize",
+        "mean": 0,
+        "std": 1.0
+      },
+      {
+        "name": "reduce_tonal_noise"
+      }
+    ],
+    "window_func": "hamming",
+    "type": "MagSpectrogram",
+    "duration": 1.0
+  }
+}
