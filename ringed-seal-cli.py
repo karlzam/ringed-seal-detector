@@ -115,7 +115,7 @@ def get_detections(batch_generator, models, output_dir, threshold, raven_txt, au
 
     return detections_grp
 
-def run_models(model_folder, audio_path, output_dir, threshold, step_size, batch_size, spectro_file):
+def run_models(model_folder, audio_folder, output_folder, threshold, step_size, batch_size, spectro_file):
 
     model_folder = model_folder
 
@@ -129,11 +129,11 @@ def run_models(model_folder, audio_path, output_dir, threshold, step_size, batch
                 model_folder + "\\" + "temp-6", model_folder + "\\" + "temp-7", model_folder + "\\" + "temp-8",
                 model_folder + "\\" + "temp-9"]
 
-    raven_txt = output_dir + '\\' + 'raven-formatted-detections.txt'
+    raven_txt = output_folder + '\\' + 'raven-formatted-detections.txt'
 
-    batch_generator = get_batch_generator(spectro_file, audio_path, step_size, batch_size)
+    batch_generator = get_batch_generator(spectro_file, audio_folder, step_size, batch_size)
     all_models = load_models(model_names, temp_folders)
-    get_detections(batch_generator, all_models, output_dir, threshold, raven_txt, audio_path)
+    get_detections(batch_generator, all_models, output_folder, threshold, raven_txt, audio_folder)
 
 ## commandline tool
 
@@ -145,8 +145,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser("Ringed Seal Detector")
     parser.add_argument('model_folder', type=str, help='Folder containing the .kt files')
-    parser.add_argument('audio_path', type=str, help='Folder with audio files')
-    parser.add_argument('output_dir', type=str, help='Folder where files will be output into')
+    parser.add_argument('audio_folder', type=str, help='Folder with audio files')
+    parser.add_argument('output_folder', type=str, help='Folder where files will be output into')
     parser.add_argument('--threshold', type=float, help='Threshold at and above to output files', default=0.5)
     parser.add_argument('--step_size', type=float, help='Step size for processing audio data', default=0.5)
     parser.add_argument('--batch_size', type=float, help='Batch size for processing audio data', default=16)
