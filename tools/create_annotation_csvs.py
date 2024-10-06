@@ -89,7 +89,8 @@ def format_annot(df, output_name):
         # append this wav files info to the df_annot df
         df_annot = pd.concat([df_annot, df_temp], ignore_index=True)
 
-    df_annot = df_annot.rename(columns={'Call Type': "call_type"})
+    #df_annot = df_annot.rename(columns={'Call Type': "call_type"})
+    df_annot = df_annot.rename(columns={'Type': "call_type"})
 
     df_annot_sub = df_annot[['site_name', 'Selection', 'filename', 'start', 'end', 'annot_id']]
 
@@ -126,10 +127,10 @@ def split_files(df, output_folder):
 
 if __name__ == "__main__":
 
-    output_dir = r'D:\ringed_seal_selection_tables\ulu2023'
+    output_dir = r'E:\detector_2\annots\CierrasFiles\selection_tables\annot_format'
 
     # path to folder with selection tables
-    sel_table_path = r'D:\ringed_seal_selection_tables\ulu2023'
+    sel_table_path = r'E:\detector_2\annots\CierrasFiles\selection_tables'
 
     # name of output selection tables excel workbook (just for reference)
     output_file_trim = output_dir + r'\all_annotations.xlsx'
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     all_annot_orig = concat_annot(sel_table_path)
 
     # output an Excel sheet with all the annotations before splitting
-    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20240208.xlsx')
+    formatted_table = format_annot(all_annot_orig, output_name=output_dir + r'\all_annotations_20240821.xlsx')
 
     # split files into train and val csvs
     #split_files(formatted_table, output_folder=output_dir)
