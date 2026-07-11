@@ -1,3 +1,7 @@
+# Note if you get numpy errors use this: 
+# python -m pip uninstall -y numpy
+# python -m pip install --no-cache-dir --force-reinstall numpy==1.24.4
+
 import pandas as pd
 import os
 import tensorflow as tf
